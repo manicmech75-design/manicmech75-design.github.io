@@ -662,6 +662,32 @@ function devSelfTest() {
       alert("Copy this save:\n\n" + raw);
     }
   };
+  
+${DEV_MODE ? `
+<hr style="margin:18px auto; border-top:1px dashed rgba(255,255,255,.2)">
+<div style="text-align:center;">
+  <div style="font-weight:900; margin-bottom:6px;">🧪 DEV PANEL</div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+    <button id="dev1k">+1K</button>
+    <button id="dev1m">+1M</button>
+    <button id="devUpg">Max Upgrades</button>
+    <button id="devBld">+10 Buildings</button>
+    <button id="devPrest">+10 Prestige</button>
+    <button id="devReset">Reset Run</button>
+    <button id="devTest">Run Tests</button>
+  </div>
+</div>
+` : ""}
+  
+if (DEV_MODE) {
+  document.getElementById("dev1k").onclick = () => devGiveCoins(1_000);
+  document.getElementById("dev1m").onclick = () => devGiveCoins(1_000_000);
+  document.getElementById("devUpg").onclick = devMaxUpgrades;
+  document.getElementById("devBld").onclick = () => devBuyAllBuildings(10);
+  document.getElementById("devPrest").onclick = () => devGivePrestige(10);
+  document.getElementById("devReset").onclick = devResetRunOnly;
+  document.getElementById("devTest").onclick = devSelfTest;
+}
 
   $("importBtn").onclick = () => {
     const raw = prompt("Paste your exported save JSON here:");
