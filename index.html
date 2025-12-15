@@ -8,6 +8,8 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0b1220">
   <link rel="icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <title>City Flip</title>
 
@@ -34,7 +36,7 @@
     }
     .app{width:min(440px,100%); display:grid; gap:14px;}
     .topbar{
-      display:grid; grid-template-columns: 1fr auto auto;
+      display:grid; grid-template-columns: 1fr auto auto auto;
       gap:10px; align-items:center;
       padding:14px;
       background:var(--panel);
@@ -50,12 +52,21 @@
       border:1px solid rgba(255,255,255,0.12);
       font-size:18px;
     }
-    .stat{
-      text-align:right; line-height:1.1;
-      min-width: 64px;
-    }
+    .stat{ text-align:right; line-height:1.1; min-width: 58px; }
     .stat .label{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px;}
     .stat .value{font-size:20px; font-weight:900;}
+    .iconbtn{
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color:#fff;
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-weight: 900;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .iconbtn:active{ transform: translateY(1px); }
+
     .frame{
       position:relative;
       background: rgba(0,0,0,0.18);
@@ -80,6 +91,7 @@
       transition: opacity 160ms ease, transform 160ms ease;
       pointer-events:none;
       backdrop-filter: blur(8px);
+      z-index: 3;
     }
     .toast.show{
       opacity:1;
@@ -91,6 +103,7 @@
       display:grid; place-items:center;
       padding:18px;
       background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.10), rgba(0,0,0,0.45));
+      z-index: 4;
     }
     .card{
       width:min(360px,92%);
@@ -141,6 +154,8 @@
         <div class="label">Best</div>
         <div class="value" id="best">0</div>
       </div>
+
+      <button class="iconbtn" id="muteBtn" title="Mute">🔊</button>
     </div>
 
     <div class="frame" id="frame">
@@ -150,22 +165,26 @@
       <div class="overlay" id="overlay">
         <div class="card">
           <h1>Build the skyline</h1>
-          <p>Tap to place each block. If you miss the stack, it’s game over. Hit perfect placements for bonus.</p>
+          <p>Tap to drop blocks. Overhang gets cut off. No overlap = game over.</p>
           <div class="btnrow">
             <button class="btn" id="startBtn">Start</button>
+            <button class="btn secondary" id="installBtn" style="display:none;">Install App</button>
             <button class="btn secondary" id="howBtn">How to play</button>
           </div>
           <p id="howText" style="display:none;margin-top:12px;">
             • The top block moves left/right.<br>
-            • Tap to lock it in place.<br>
-            • Overhang gets cut off.<br>
-            • No overlap = game over.
+            • Tap to drop it.<br>
+            • Overhang is sliced off.<br>
+            • Miss the stack = game over.
+          </p>
+          <p style="margin-top:12px;color:rgba(255,255,255,0.60);font-size:12px;">
+            Works offline after first load.
           </p>
         </div>
       </div>
     </div>
 
-    <div class="footer">City Flip • v1 (stack + sound)</div>
+    <div class="footer">City Flip • PWA game</div>
   </div>
 
   <script>
@@ -177,25 +196,52 @@
     const howBtn = document.getElementById("howBtn");
     const howText = document.getElementById("howText");
     const toast = document.getElementById("toast");
-
     const scoreEl = document.getElementById("score");
     const bestEl = document.getElementById("best");
+    const frame = document.getElementById("frame");
+    const muteBtn = document.getElementById("muteBtn");
+    const installBtn = document.getElementById("installBtn");
 
-    // ---------- Best score ----------
-    const BEST_KEY = "cityflip_best_v1";
+    // ---------- Persisted settings ----------
+    const BEST_KEY = "cityflip_best_v2";
+    const MUTE_KEY = "cityflip_mute_v2";
     let best = Number(localStorage.getItem(BEST_KEY) || 0);
     bestEl.textContent = best;
+
+    let muted = (localStorage.getItem(MUTE_KEY) === "1");
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+
+    // ---------- PWA install prompt ----------
+    let deferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = "block";
+    });
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.style.display = "none";
+    });
+
+    // ---------- Service Worker ----------
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+    }
 
     // ---------- Sound + Haptics ----------
     let audioCtx = null;
 
     function initAudio() {
-      // browsers require user gesture to start audio
+      if (muted) return;
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === "suspended") audioCtx.resume();
     }
 
     function beep({ freq = 440, dur = 0.06, type = "sine", vol = 0.06 } = {}) {
+      if (muted) return;
       if (!audioCtx) return;
       const t = audioCtx.currentTime;
 
@@ -217,18 +263,26 @@
     }
 
     function haptic(pattern = [10]) {
-      // Android: usually works. iOS Safari: usually no.
       if (navigator.vibrate) navigator.vibrate(pattern);
     }
 
     function sfx(name) {
+      if (muted) return;
       if (name === "place")  beep({ freq: 520, dur: 0.045, type: "square",   vol: 0.04 });
       if (name === "perfect") {
         beep({ freq: 740, dur: 0.05, type: "triangle", vol: 0.06 });
         setTimeout(() => beep({ freq: 990, dur: 0.06, type: "triangle", vol: 0.06 }), 55);
       }
+      if (name === "slice")  beep({ freq: 330, dur: 0.06, type: "sawtooth", vol: 0.035 });
       if (name === "gameover") beep({ freq: 180, dur: 0.14, type: "sawtooth", vol: 0.05 });
     }
+
+    muteBtn.addEventListener("click", () => {
+      muted = !muted;
+      localStorage.setItem(MUTE_KEY, muted ? "1" : "0");
+      muteBtn.textContent = muted ? "🔇" : "🔊";
+      if (!muted) initAudio();
+    });
 
     // ---------- Canvas helpers ----------
     function resizeCanvasToDisplay() {
@@ -248,6 +302,8 @@
     // ---------- Game state ----------
     let running = false;
     let score = 0;
+    let dropInProgress = false;
+    let gameOverShown = false;
 
     const state = {
       w: 0,
@@ -259,11 +315,13 @@
       speed: 2.2,
       perfectTolerance: 4,
       blockH: 26,
-      baseW: 170
+      baseW: 170,
+      dropSpeed: 16,       // px/frame while dropping
+      gapY: 70             // vertical gap from previous block while moving
     };
 
     function makeBlock(x, y, w, h, color, moving=false) {
-      return { x, y, w, h, color, moving, dir: 1 };
+      return { x, y, w, h, color, moving, dir: 1, vx: 0, vy: 0, falling: false };
     }
 
     function showToast(text, danger=false) {
@@ -278,6 +336,8 @@
     function resetGame() {
       score = 0;
       scoreEl.textContent = score;
+      dropInProgress = false;
+      gameOverShown = false;
 
       const { w, h } = resizeCanvasToDisplay();
       state.w = w; state.h = h;
@@ -297,7 +357,9 @@
     function spawnActiveBlock() {
       const top = state.stack[state.stack.length - 1];
       const nextW = top.w;
-      const startY = top.y - state.blockH - 10;
+
+      const targetY = top.y - state.blockH;
+      const startY = targetY - state.gapY;
 
       const fromLeft = (state.stack.length % 2 === 0);
       const startX = fromLeft ? -nextW : state.w + nextW;
@@ -305,7 +367,9 @@
       state.active = makeBlock(startX, startY, nextW, state.blockH, "#4ade80", true);
       state.active.dir = fromLeft ? 1 : -1;
 
-      state.speed = 2.2 + Math.min(2.0, score * 0.03);
+      // difficulty ramp
+      state.speed = 2.2 + Math.min(2.6, score * 0.035);
+      state.perfectTolerance = Math.max(2, 4 - Math.floor(score / 20));
     }
 
     // ---------- Drawing ----------
@@ -334,19 +398,21 @@
     }
 
     function drawBlock(b) {
+      const y = b.y - state.cameraY;
+
       // shadow
       ctx.globalAlpha = 0.22;
       ctx.fillStyle = "#000";
-      ctx.fillRect(b.x + 6, b.y + 8 - state.cameraY, b.w, b.h);
+      ctx.fillRect(b.x + 6, y + 8, b.w, b.h);
       ctx.globalAlpha = 1;
 
       ctx.fillStyle = b.color;
-      ctx.fillRect(b.x, b.y - state.cameraY, b.w, b.h);
+      ctx.fillRect(b.x, y, b.w, b.h);
 
-      // highlight strip
+      // highlight
       ctx.globalAlpha = 0.18;
       ctx.fillStyle = "#fff";
-      ctx.fillRect(b.x + 6, (b.y - state.cameraY) + 5, Math.max(0, b.w - 12), 4);
+      ctx.fillRect(b.x + 6, y + 5, Math.max(0, b.w - 12), 4);
       ctx.globalAlpha = 1;
     }
 
@@ -372,59 +438,46 @@
       ctx.fillStyle = "#fff";
       ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("Tap to place", state.w / 2, 22);
+      ctx.fillText(dropInProgress ? "Dropping..." : "Tap to drop", state.w / 2, 22);
       ctx.globalAlpha = 1;
     }
 
-    // ---------- Loop ----------
-    function update() {
-      if (!running) return;
-
-      const { w, h } = resizeCanvasToDisplay();
-      state.w = w; state.h = h;
-      state.groundY = h - 90;
-
-      const a = state.active;
-      if (a && a.moving) {
-        a.x += a.dir * state.speed;
-
-        const pad = 26;
-        if (a.x < -a.w - pad) a.dir = 1;
-        if (a.x > state.w + pad) a.dir = -1;
-      }
-
-      const top = state.stack[state.stack.length - 1];
-      const targetCam = Math.max(0, (top.y - (state.h * 0.62)));
-      state.cameraY += (targetCam - state.cameraY) * 0.08;
-
-      draw();
-      requestAnimationFrame(update);
-    }
-
     // ---------- Mechanics ----------
-    function placeBlock() {
+    function beginDrop() {
       if (!running) return;
+      if (dropInProgress) return;
       const a = state.active;
       if (!a || !a.moving) return;
 
+      initAudio();
+
+      // stop horizontal movement, start drop
+      a.moving = false;
+      dropInProgress = true;
+    }
+
+    function resolvePlacement() {
+      const a = state.active;
       const prev = state.stack[state.stack.length - 1];
 
+      // overlap computation
       const left = Math.max(a.x, prev.x);
       const right = Math.min(a.x + a.w, prev.x + prev.w);
       const overlap = right - left;
 
       if (overlap <= 0) {
         running = false;
-        showToast("Miss! Game Over", true);
         sfx("gameover");
         haptic([30, 40, 30]);
-        endGame();
+        showToast("Miss! Game Over", true);
+        showGameOver();
         return;
       }
 
       const offset = Math.abs(a.x - prev.x);
       const perfect = offset <= state.perfectTolerance;
 
+      // placed block dims
       let placedX = left;
       let placedW = overlap;
 
@@ -433,13 +486,37 @@
         placedW = prev.w;
       }
 
-      const newY = prev.y - state.blockH;
-      const placed = makeBlock(placedX, newY, placedW, state.blockH, "rgba(255,255,255,0.16)");
+      // create falling overhang if any (visual “slice”)
+      const overhangLeft = placedX - a.x;
+      const overhangRight = (a.x + a.w) - (placedX + placedW);
+      const targetY = prev.y - state.blockH;
+
+      if (!perfect && (overhangLeft > 0 || overhangRight > 0)) {
+        sfx("slice");
+      }
+
+      if (overhangLeft > 0) {
+        const fall = makeBlock(a.x, targetY, overhangLeft, a.h, "rgba(74,222,128,0.65)");
+        fall.falling = true;
+        fall.vx = -3;
+        fall.vy = 2;
+        addFallingPiece(fall);
+      }
+      if (overhangRight > 0) {
+        const fx = placedX + placedW;
+        const fall = makeBlock(fx, targetY, overhangRight, a.h, "rgba(74,222,128,0.65)");
+        fall.falling = true;
+        fall.vx = 3;
+        fall.vy = 2;
+        addFallingPiece(fall);
+      }
+
+      // lock placed block
+      const placed = makeBlock(placedX, targetY, placedW, state.blockH, "rgba(255,255,255,0.16)");
       state.stack.push(placed);
 
-      // score + feedback
+      // score
       score += 1;
-
       sfx("place");
       haptic([10]);
 
@@ -458,17 +535,41 @@
         bestEl.textContent = best;
       }
 
+      // next
+      dropInProgress = false;
       spawnActiveBlock();
     }
 
-    function endGame() {
+    // Falling debris pieces
+    const debris = [];
+    function addFallingPiece(piece) {
+      debris.push(piece);
+      if (debris.length > 10) debris.shift();
+    }
+    function updateDebris() {
+      for (let i = debris.length - 1; i >= 0; i--) {
+        const p = debris[i];
+        p.vy += 0.7; // gravity
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y - state.cameraY > state.h + 200) debris.splice(i, 1);
+      }
+    }
+    function drawDebris() {
+      for (const p of debris) drawBlock(p);
+    }
+
+    function showGameOver() {
+      if (gameOverShown) return;
+      gameOverShown = true;
+
       overlay.innerHTML = `
         <div class="card">
           <h1>Game Over</h1>
           <p>Your score: <b>${score}</b><br/>Best: <b>${best}</b></p>
           <div class="btnrow">
             <button class="btn" id="restartBtn">Restart</button>
-            <button class="btn secondary" id="closeBtn">Close</button>
+            <button class="btn secondary" id="menuBtn">Main Menu</button>
           </div>
           <p style="margin-top:12px;color:rgba(255,255,255,0.70);font-size:12px;">
             Tip: aim for <b>Perfect</b> alignments to keep full width.
@@ -481,12 +582,76 @@
         overlay.style.display = "none";
         resetGame();
         running = true;
-        update();
       });
 
-      document.getElementById("closeBtn").addEventListener("click", () => {
+      document.getElementById("menuBtn").addEventListener("click", () => {
         location.reload();
       });
+    }
+
+    // ---------- Main loop ----------
+    function step() {
+      if (!running) return;
+
+      const { w, h } = resizeCanvasToDisplay();
+      state.w = w; state.h = h;
+      state.groundY = h - 90;
+
+      const a = state.active;
+
+      // move or drop active block
+      if (a) {
+        if (a.moving) {
+          a.x += a.dir * state.speed;
+          const pad = 26;
+          if (a.x < -a.w - pad) a.dir = 1;
+          if (a.x > state.w + pad) a.dir = -1;
+        } else if (dropInProgress) {
+          const prev = state.stack[state.stack.length - 1];
+          const targetY = prev.y - state.blockH;
+
+          a.y += state.dropSpeed;
+
+          // when it reaches target, resolve
+          if (a.y >= targetY) {
+            a.y = targetY;
+            resolvePlacement();
+          }
+        }
+      }
+
+      // camera follows stack up
+      const top = state.stack[state.stack.length - 1];
+      const targetCam = Math.max(0, (top.y - (state.h * 0.62)));
+      state.cameraY += (targetCam - state.cameraY) * 0.08;
+
+      updateDebris();
+
+      // draw
+      drawBackground();
+
+      ctx.globalAlpha = 0.10;
+      ctx.fillStyle = "#fff";
+      for (let i = 0; i < 14; i++) {
+        const bw = 18 + (i % 4) * 10;
+        const bh = 90 + (i % 6) * 26;
+        const bx = i * (state.w / 14);
+        ctx.fillRect(bx, state.groundY - bh, bw, bh);
+      }
+      ctx.globalAlpha = 1;
+
+      for (const b of state.stack) drawBlock(b);
+      drawDebris();
+      if (state.active) drawBlock(state.active);
+
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = "#fff";
+      ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(dropInProgress ? "Dropping..." : "Tap to drop", state.w / 2, 22);
+      ctx.globalAlpha = 1;
+
+      requestAnimationFrame(step);
     }
 
     // ---------- UI ----------
@@ -495,29 +660,19 @@
     });
 
     startBtn.addEventListener("click", () => {
-      initAudio(); // unlock audio on start tap
+      initAudio();
       overlay.style.display = "none";
       resetGame();
       running = true;
-      update();
+      step();
     });
 
-    // Tap anywhere on the frame to place
-    document.getElementById("frame").addEventListener("pointerdown", (e) => {
+    // Tap anywhere on the frame to drop
+    frame.addEventListener("pointerdown", (e) => {
       e.preventDefault();
-      initAudio(); // unlock audio on first gesture
       if (!running) return;
-      placeBlock();
+      beginDrop();
     }, { passive: false });
-
-    window.addEventListener("resize", () => {
-      if (!running) {
-        const rect = resizeCanvasToDisplay();
-        state.w = rect.w; state.h = rect.h;
-        state.groundY = rect.h - 90;
-        drawBackground();
-      }
-    });
 
     // initial still frame behind overlay
     (function initialDraw(){
