@@ -1,9 +1,9 @@
+console.log("✅ game.js loaded");
+
 // Flip City - Full game script (Upgrades + Buildings + Tiles + Prestige + Achieves + Save + Tests)
 document.addEventListener("DOMContentLoaded", () => {
   const SAVE_KEY = "flipcity_save_v5_tiles_upgrades";
   const DEV_MODE = true; // 🔧 set false when you want to hide dev panel
-  
-console.log("✅ game.js loaded");
 
   // ---------- Upgrade definitions ----------
   const UPG = {
