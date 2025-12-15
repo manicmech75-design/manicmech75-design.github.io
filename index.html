@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>City Flip</title>
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
@@ -15,10 +17,27 @@
     crossorigin="anonymous">
   </script>
 
-  <!-- Ad + layout CSS -->
+  <!-- Layout + Ad CSS -->
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      padding-bottom: 70px;
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1a2a44, #0b1220);
+      color: #ffffff;
+      padding-bottom: 70px; /* space for ad */
+    }
+
+    #game {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 70px);
+      font-size: 24px;
     }
 
     #ad-banner {
@@ -27,9 +46,34 @@
       width: 100%;
       z-index: 999;
       background: #0b1220;
+      text-align: center;
     }
   </style>
-
-  <title>City Flip</title>
 </head>
+
 <body>
+
+  <!-- GAME CONTAINER -->
+  <div id="game">
+    City Flip Loaded ✅
+  </div>
+
+  <!-- BANNER AD -->
+  <div id="ad-banner">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXX"
+         data-ad-slot="BANNER_SLOT_ID"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+  </div>
+
+  <script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+
+  <!-- GAME SCRIPT (ADD YOUR REAL FILE HERE) -->
+  <!-- Example: <script src="game.js"></script> -->
+
+</body>
+</html>
