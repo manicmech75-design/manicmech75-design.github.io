@@ -1,4 +1,4 @@
-  const CACHE = "cityflip-ultra-cache-v5";
+const CACHE = "cityflip-ultra-cache-v6";
 const OFFLINE_URL = "./offline.html";
 
 const CORE = [
@@ -37,7 +37,7 @@ self.addEventListener("fetch", (event) => {
 
   const isGameJS = url.pathname.endsWith("/game.js") || url.pathname.endsWith("game.js");
 
-  // Network-first for HTML pages (so updates flow)
+  // Network-first for HTML so updates always come through
   if (isHTML) {
     event.respondWith(
       fetch(req)
@@ -51,7 +51,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first for game.js specifically (prevents “stuck old script”)
+  // Network-first for game.js specifically (prevents “stuck loading”)
   if (isGameJS) {
     event.respondWith(
       fetch(req)
@@ -65,17 +65,16 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for other assets (images, css, etc.)
+  // Cache-first for other assets
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
-      return fetch(req)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-          return resp;
-        })
-        .catch(() => Response.error());
+      return fetch(req).then((resp) => {
+        const copy = resp.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy));
+        return resp;
+      });
     })
   );
 });
+
