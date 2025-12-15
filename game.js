@@ -1,9 +1,14 @@
 // game.js
-console.log("Game loaded");
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Game loaded");
 
-const game = document.getElementById("game");
+  const game = document.getElementById("game");
 
-if (game) {
+  if (!game) {
+    console.error("Game container not found");
+    return;
+  }
+
   game.innerHTML = `
     <h2>🏙️ Flip City</h2>
     <p>Tap to earn coins</p>
@@ -12,8 +17,9 @@ if (game) {
   `;
 
   let coins = 0;
+
   document.getElementById("earn").onclick = () => {
     coins++;
     document.getElementById("coins").textContent = "Coins: " + coins;
   };
-}
+});
