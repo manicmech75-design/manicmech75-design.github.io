@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0b1220">
   <link rel="icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -21,40 +22,52 @@
       --text:#fff; --muted: rgba(255,255,255,0.72);
       --accent:#4ade80; --danger:#fb7185;
       --radius:16px;
+      --safeT: env(safe-area-inset-top, 0px);
+      --safeB: env(safe-area-inset-bottom, 0px);
+      --safeL: env(safe-area-inset-left, 0px);
+      --safeR: env(safe-area-inset-right, 0px);
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      margin:0; min-height:100vh;
+      margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       color:var(--text);
       background: radial-gradient(circle at top, var(--bg1), var(--bg2));
-      display:flex; justify-content:center; align-items:center;
-      padding:18px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: calc(16px + var(--safeT)) calc(16px + var(--safeR)) calc(16px + var(--safeB)) calc(16px + var(--safeL));
       overscroll-behavior:none;
       -webkit-tap-highlight-color: transparent;
       user-select:none;
     }
-    .app{width:min(480px,100%); display:grid; gap:14px;}
+    .app{width:min(540px,100%); display:grid; gap:12px;}
     .topbar{
-      display:grid; grid-template-columns: 1fr auto auto auto auto auto;
-      gap:10px; align-items:center;
-      padding:14px;
+      display:grid;
+      grid-template-columns: 1fr auto auto auto auto auto;
+      gap:10px;
+      align-items:center;
+      padding:12px 12px;
       background:var(--panel);
       border:1px solid var(--border);
       border-radius:var(--radius);
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
     }
     .brand{display:flex; align-items:center; gap:10px; font-weight:800;}
     .logo{
-      width:34px; height:34px; display:grid; place-items:center;
+      width:34px; height:34px;
+      display:grid; place-items:center;
       border-radius:12px;
       background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
       border:1px solid rgba(255,255,255,0.12);
       font-size:18px;
     }
-    .stat{ text-align:right; line-height:1.1; min-width: 58px; }
-    .stat .label{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px;}
-    .stat .value{font-size:18px; font-weight:900;}
+    .sub{font-size:12px;color:rgba(255,255,255,0.70);margin-top:2px}
+    .stat{ text-align:right; line-height:1.1; min-width: 62px; }
+    .stat .label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px;}
+    .stat .value{font-size:17px; font-weight:900;}
+
     .iconbtn{
       border:1px solid rgba(255,255,255,0.14);
       background: rgba(255,255,255,0.08);
@@ -64,8 +77,10 @@
       font-weight: 900;
       cursor: pointer;
       line-height: 1;
+      touch-action: manipulation;
     }
     .iconbtn:active{ transform: translateY(1px); }
+    .iconbtn[aria-pressed="true"]{ outline:2px solid rgba(74,222,128,0.35); }
 
     .frame{
       position:relative;
@@ -80,10 +95,11 @@
     canvas{width:100%; height:100%; display:block;}
 
     .toast{
-      position:absolute; top:14px; left:50%; transform:translateX(-50%);
+      position:absolute; top:12px; left:50%;
+      transform:translateX(-50%);
       padding:8px 12px;
       border-radius:999px;
-      font-weight:800;
+      font-weight:900;
       background: rgba(255,255,255,0.10);
       border:1px solid rgba(255,255,255,0.14);
       color:#fff;
@@ -94,10 +110,7 @@
       z-index: 3;
       white-space: nowrap;
     }
-    .toast.show{
-      opacity:1;
-      transform: translateX(-50%) translateY(2px);
-    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(2px); }
 
     .overlay{
       position:absolute; inset:0;
@@ -107,16 +120,17 @@
       z-index: 4;
     }
     .card{
-      width:min(380px,92%);
+      width:min(440px,92%);
       padding:16px;
       border-radius:18px;
-      background: rgba(10, 18, 32, 0.72);
+      background: rgba(10, 18, 32, 0.78);
       border:1px solid rgba(255,255,255,0.12);
       backdrop-filter: blur(10px);
       text-align:center;
     }
     .card h1{margin:0 0 6px; font-size:22px;}
-    .card p{margin:0 0 14px; color:var(--muted); font-size:14px; line-height:1.35;}
+    .card p{margin:0 0 12px; color:var(--muted); font-size:14px; line-height:1.35;}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
     .btnrow{display:grid; gap:10px;}
     .btn{
       width:100%;
@@ -131,34 +145,56 @@
       color:#0b1220;
       background: linear-gradient(180deg, #e5e7eb, #cbd5e1);
     }
-    .modeRow{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-      margin-bottom: 10px;
-    }
-    .chip{
+    .pill{
       display:inline-block;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.14);
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.14);
       background: rgba(255,255,255,0.08);
       color: rgba(255,255,255,0.85);
+      margin: 6px 4px 0 4px;
+    }
+    .settings{
+      text-align:left;
       margin-top: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+    }
+    .row{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px; padding:8px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .row:last-child{border-bottom:none}
+    .row label{font-size:13px;color:rgba(255,255,255,0.88)}
+    select, input[type="checkbox"]{ transform: scale(1.1); }
+    select{
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 10px;
+      padding: 8px 10px;
+      outline: none;
     }
     .footer{ text-align:center; font-size:12px; color: rgba(255,255,255,0.65); }
+
+    /* High contrast */
+    .hc .topbar,.hc .card{border-color: rgba(255,255,255,0.30)}
+    .hc .frame{border-color: rgba(255,255,255,0.24)}
   </style>
 </head>
 
 <body>
-  <div class="app">
+  <div class="app" id="appRoot">
     <div class="topbar">
       <div class="brand">
         <div class="logo">🏙️</div>
         <div>
           <div style="font-size:18px;">City Flip</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.70);margin-top:2px;" id="modeLabel">Mode: Easy</div>
+          <div class="sub" id="modeLabel">Mode: Easy • Classic • Level 1</div>
         </div>
       </div>
 
@@ -173,638 +209,382 @@
       </div>
 
       <div class="stat">
-        <div class="label">Combo</div>
-        <div class="value" id="combo">0</div>
+        <div class="label">Streak</div>
+        <div class="value" id="streak">0</div>
       </div>
 
-      <button class="iconbtn" id="pauseBtn" title="Pause">⏸</button>
-      <button class="iconbtn" id="muteBtn" title="Mute">🔊</button>
+      <button class="iconbtn" id="pauseBtn" title="Pause" aria-label="Pause">⏸</button>
+      <button class="iconbtn" id="settingsBtn" title="Settings" aria-label="Settings">⚙️</button>
     </div>
 
     <div class="frame" id="frame">
       <canvas id="game"></canvas>
       <div class="toast" id="toast">Perfect!</div>
 
-      <div class="overlay" id="overlay">
-        <div class="card">
+      <div class="overlay" id="overlay" aria-live="polite">
+        <div class="card" id="menuCard">
           <h1>Build the skyline</h1>
-          <p>Tap to drop blocks. Overhang gets cut off. No overlap = game over.</p>
+          <p>Tap to drop blocks. Overhang gets cut off. Miss the stack = game over (except Zen).</p>
 
-          <div class="modeRow">
+          <div class="grid2">
             <button class="btn secondary" id="easyBtn">Easy</button>
             <button class="btn secondary" id="hardBtn">Hard</button>
           </div>
 
-          <div class="btnrow">
-            <button class="btn" id="startBtn">Start</button>
+          <div class="btnrow" style="margin-top:10px;">
+            <button class="btn" id="startBtn">Start Classic</button>
+            <button class="btn secondary" id="dailyBtn">Daily Challenge</button>
+            <button class="btn secondary" id="zenBtn">Zen Mode</button>
             <button class="btn secondary" id="installBtn" style="display:none;">Install App</button>
-            <button class="btn secondary" id="howBtn">How to play</button>
           </div>
 
-          <p id="howText" style="display:none;margin-top:12px;">
-            • The top block moves left/right.<br>
-            • Tap to drop it.<br>
-            • Overhang is sliced off.<br>
-            • Miss the stack = game over.<br>
-            • Perfect hits build a <b>combo</b> for bonus points.
-          </p>
+          <div style="margin-top:10px;">
+            <span class="pill" id="achPill">Achievements: 0</span>
+            <span class="pill" id="dailyPill">Daily: not played</span>
+          </div>
 
-          <div class="chip" id="rulesChip">Perfect bonus: +1, Combo bonus: every 3 perfects +1</div>
+          <p style="margin-top:10px;color:rgba(255,255,255,0.60);font-size:12px;">
+            Perfect = extra points + streak. Every 3 perfects grants a bonus point. Levels ramp difficulty.
+          </p>
         </div>
       </div>
     </div>
 
-    <div class="footer">City Flip • PWA game (Modes + Combo + Pause)</div>
+    <div class="footer">City Flip • Ultimate PWA build</div>
   </div>
 
   <script>
-    // ---------- DOM ----------
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
-    const overlay = document.getElementById("overlay");
-    const startBtn = document.getElementById("startBtn");
-    const howBtn = document.getElementById("howBtn");
-    const howText = document.getElementById("howText");
-    const toast = document.getElementById("toast");
-    const scoreEl = document.getElementById("score");
-    const bestEl = document.getElementById("best");
-    const comboEl = document.getElementById("combo");
-    const frame = document.getElementById("frame");
-    const muteBtn = document.getElementById("muteBtn");
-    const pauseBtn = document.getElementById("pauseBtn");
-    const installBtn = document.getElementById("installBtn");
-    const modeLabel = document.getElementById("modeLabel");
-    const easyBtn = document.getElementById("easyBtn");
-    const hardBtn = document.getElementById("hardBtn");
-    const rulesChip = document.getElementById("rulesChip");
+    // ---------- SAFE BOOT ----------
+    try {
+      // DOM
+      const root = document.getElementById("appRoot");
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const overlay = document.getElementById("overlay");
+      const toast = document.getElementById("toast");
 
-    // ---------- Persisted settings ----------
-    const BEST_KEY = "cityflip_best_v3";
-    const MUTE_KEY = "cityflip_mute_v3";
-    const MODE_KEY = "cityflip_mode_v3";
+      const scoreEl = document.getElementById("score");
+      const bestEl = document.getElementById("best");
+      const streakEl = document.getElementById("streak");
+      const modeLabel = document.getElementById("modeLabel");
 
-    let best = Number(localStorage.getItem(BEST_KEY) || 0);
-    bestEl.textContent = best;
+      const pauseBtn = document.getElementById("pauseBtn");
+      const settingsBtn = document.getElementById("settingsBtn");
+      const frame = document.getElementById("frame");
 
-    let muted = (localStorage.getItem(MUTE_KEY) === "1");
-    muteBtn.textContent = muted ? "🔇" : "🔊";
+      // Save menu template (so menu can be rebuilt safely any time)
+      const MENU_TEMPLATE = overlay.innerHTML;
 
-    let mode = (localStorage.getItem(MODE_KEY) || "easy"); // "easy" | "hard"
+      // Keys
+      const KEYS = {
+        best: "cityflip_best_ultra_v1",
+        mode: "cityflip_mode_ultra_v1",            // easy|hard
+        sound: "cityflip_sound_ultra_v1",          // 1 on, 0 off
+        music: "cityflip_music_ultra_v1",          // 1 on, 0 off
+        haptics: "cityflip_haptics_ultra_v1",      // 1 on, 0 off
+        lefthand: "cityflip_lefthand_ultra_v1",    // 1 on, 0 off
+        contrast: "cityflip_contrast_ultra_v1",    // 1 on, 0 off
+        motion: "cityflip_motion_ultra_v1",        // 1 reduced motion, 0 normal
+        achievements: "cityflip_ach_ultra_v1",
+        daily: "cityflip_daily_ultra_v1",
+        dailyBest: "cityflip_dailybest_ultra_v1"
+      };
 
-    // ---------- Mode config ----------
-    const MODES = {
-      easy: {
-        name: "Easy",
-        baseSpeed: 2.2,
-        ramp: 0.030,
-        maxAdd: 2.2,
-        perfectTolStart: 5,
-        perfectTolMin: 3,
-        dropSpeed: 16,
-        comboEvery: 3
-      },
-      hard: {
-        name: "Hard",
-        baseSpeed: 2.7,
-        ramp: 0.045,
-        maxAdd: 3.2,
-        perfectTolStart: 4,
-        perfectTolMin: 2,
-        dropSpeed: 19,
-        comboEvery: 3
+      // Stored
+      let best = Number(localStorage.getItem(KEYS.best) || 0);
+      bestEl.textContent = best;
+
+      let mode = (localStorage.getItem(KEYS.mode) || "easy");
+      let soundOn = (localStorage.getItem(KEYS.sound) !== "0");     // default on
+      let musicOn = (localStorage.getItem(KEYS.music) === "1");     // default off
+      let hapticsOn = (localStorage.getItem(KEYS.haptics) !== "0"); // default on
+      let leftHand = (localStorage.getItem(KEYS.lefthand) === "1");
+      let hiContrast = (localStorage.getItem(KEYS.contrast) === "1");
+      let reducedMotion = (localStorage.getItem(KEYS.motion) === "1");
+
+      if (hiContrast) root.classList.add("hc");
+
+      // Achievements
+      const ACH = {
+        FIRST_PERFECT: "FIRST_PERFECT",
+        TEN_SCORE: "TEN_SCORE",
+        FIFTY_SCORE: "FIFTY_SCORE",
+        DAILY_PLAY: "DAILY_PLAY",
+        HARD_25: "HARD_25"
+      };
+      function loadAch() {
+        try { return JSON.parse(localStorage.getItem(KEYS.achievements) || "[]"); } catch { return []; }
       }
-    };
-
-    function applyModeUI() {
-      const m = MODES[mode];
-      modeLabel.textContent = `Mode: ${m.name}`;
-      rulesChip.textContent = `Perfect bonus: +1, Combo bonus: every ${m.comboEvery} perfects +1`;
-      easyBtn.style.opacity = (mode === "easy") ? "1" : "0.7";
-      hardBtn.style.opacity = (mode === "hard") ? "1" : "0.7";
-    }
-    applyModeUI();
-
-    easyBtn.addEventListener("click", () => {
-      mode = "easy";
-      localStorage.setItem(MODE_KEY, mode);
-      applyModeUI();
-    });
-    hardBtn.addEventListener("click", () => {
-      mode = "hard";
-      localStorage.setItem(MODE_KEY, mode);
-      applyModeUI();
-    });
-
-    // ---------- PWA install prompt ----------
-    let deferredPrompt = null;
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = "block";
-    });
-    installBtn.addEventListener("click", async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      installBtn.style.display = "none";
-    });
-
-    // ---------- Service Worker ----------
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(()=>{}));
-    }
-
-    // ---------- Sound + Haptics ----------
-    let audioCtx = null;
-    function initAudio() {
-      if (muted) return;
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") audioCtx.resume();
-    }
-    function beep({ freq = 440, dur = 0.06, type = "sine", vol = 0.06 } = {}) {
-      if (muted || !audioCtx) return;
-      const t = audioCtx.currentTime;
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = type;
-      o.frequency.setValueAtTime(freq, t);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g); g.connect(audioCtx.destination);
-      o.start(t); o.stop(t + dur + 0.02);
-    }
-    function haptic(pattern = [10]) { if (navigator.vibrate) navigator.vibrate(pattern); }
-    function sfx(name) {
-      if (muted) return;
-      if (name === "place")  beep({ freq: 520, dur: 0.045, type: "square",   vol: 0.04 });
-      if (name === "perfect") {
-        beep({ freq: 740, dur: 0.05, type: "triangle", vol: 0.06 });
-        setTimeout(() => beep({ freq: 990, dur: 0.06, type: "triangle", vol: 0.06 }), 55);
+      function saveAch(list) {
+        localStorage.setItem(KEYS.achievements, JSON.stringify(list));
+        const pill = overlay.querySelector("#achPill");
+        if (pill) pill.textContent = `Achievements: ${list.length}`;
       }
-      if (name === "slice")  beep({ freq: 330, dur: 0.06, type: "sawtooth", vol: 0.035 });
-      if (name === "gameover") beep({ freq: 180, dur: 0.14, type: "sawtooth", vol: 0.05 });
-      if (name === "pause") beep({ freq: 260, dur: 0.07, type: "sine", vol: 0.03 });
-      if (name === "resume") beep({ freq: 460, dur: 0.06, type: "sine", vol: 0.03 });
-    }
-    muteBtn.addEventListener("click", () => {
-      muted = !muted;
-      localStorage.setItem(MUTE_KEY, muted ? "1" : "0");
-      muteBtn.textContent = muted ? "🔇" : "🔊";
-      if (!muted) initAudio();
-    });
+      let achievements = loadAch();
 
-    // ---------- Canvas helpers ----------
-    function resizeCanvasToDisplay() {
-      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      const rect = canvas.getBoundingClientRect();
-      const w = Math.floor(rect.width * dpr);
-      const h = Math.floor(rect.height * dpr);
-      if (canvas.width !== w || canvas.height !== h) {
-        canvas.width = w; canvas.height = h;
+      function showToast(text, danger=false) {
+        toast.textContent = text;
+        toast.style.borderColor = danger ? "rgba(251,113,133,0.45)" : "rgba(255,255,255,0.14)";
+        toast.style.background = danger ? "rgba(251,113,133,0.16)" : "rgba(255,255,255,0.10)";
+        toast.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(()=> toast.classList.remove("show"), 650);
       }
-      ctx.setTransform(1,0,0,1,0,0);
-      ctx.scale(dpr, dpr);
-      return { w: rect.width, h: rect.height };
-    }
-
-    // ---------- Game state ----------
-    let running = false;
-    let paused = false;
-    let score = 0;
-    let perfectCombo = 0;
-    let dropInProgress = false;
-    let gameOverShown = false;
-    let rafId = null;
-
-    const state = {
-      w: 0,
-      h: 0,
-      groundY: 0,
-      stack: [],
-      active: null,
-      cameraY: 0,
-      speed: 2.2,
-      perfectTolerance: 4,
-      blockH: 26,
-      baseW: 170,
-      dropSpeed: 16,
-      gapY: 70
-    };
-
-    function makeBlock(x, y, w, h, color, moving=false) {
-      return { x, y, w, h, color, moving, dir: 1, vx: 0, vy: 0, falling: false };
-    }
-
-    function showToast(text, danger=false) {
-      toast.textContent = text;
-      toast.style.borderColor = danger ? "rgba(251,113,133,0.45)" : "rgba(255,255,255,0.14)";
-      toast.style.background = danger ? "rgba(251,113,133,0.16)" : "rgba(255,255,255,0.10)";
-      toast.classList.add("show");
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(()=> toast.classList.remove("show"), 560);
-    }
-
-    // Debris
-    const debris = [];
-    function addFallingPiece(piece) {
-      debris.push(piece);
-      if (debris.length > 12) debris.shift();
-    }
-    function updateDebris() {
-      for (let i = debris.length - 1; i >= 0; i--) {
-        const p = debris[i];
-        p.vy += 0.75;
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.y - state.cameraY > state.h + 240) debris.splice(i, 1);
+      function unlock(code, label) {
+        if (achievements.includes(code)) return;
+        achievements.push(code);
+        localStorage.setItem(KEYS.achievements, JSON.stringify(achievements));
+        showToast(`🏆 ${label}`);
       }
-    }
 
-    // Mode -> gameplay numbers
-    function applyModeToState() {
-      const m = MODES[mode];
-      state.dropSpeed = m.dropSpeed;
-    }
+      // Modes
+      const MODES = {
+        easy: { name: "Easy", baseSpeed: 2.2, ramp: 0.030, maxAdd: 2.2, tolStart: 5, tolMin: 3, dropSpeed: 16, comboEvery: 3 },
+        hard: { name: "Hard", baseSpeed: 2.8, ramp: 0.050, maxAdd: 3.4, tolStart: 4, tolMin: 2, dropSpeed: 20, comboEvery: 3 }
+      };
 
-    function resetGame() {
-      applyModeToState();
+      // PWA install prompt
+      let deferredPrompt = null;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const btn = overlay.querySelector("#installBtn");
+        if (btn) btn.style.display = "block";
+      });
 
-      score = 0;
-      perfectCombo = 0;
-      comboEl.textContent = "0";
-      scoreEl.textContent = "0";
+      // iOS A2HS hint
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const isStandalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
 
-      dropInProgress = false;
-      gameOverShown = false;
-      debris.length = 0;
-
-      const { w, h } = resizeCanvasToDisplay();
-      state.w = w; state.h = h;
-      state.groundY = h - 90;
-      state.stack = [];
-      state.cameraY = 0;
-
-      // base block
-      const baseX = (w - state.baseW) / 2;
-      const base = makeBlock(baseX, state.groundY - state.blockH, state.baseW, state.blockH, "rgba(255,255,255,0.14)");
-      state.stack.push(base);
-
-      spawnActiveBlock();
-    }
-
-    function spawnActiveBlock() {
-      const m = MODES[mode];
-      const top = state.stack[state.stack.length - 1];
-      const nextW = top.w;
-
-      const targetY = top.y - state.blockH;
-      const startY = targetY - state.gapY;
-
-      const fromLeft = (state.stack.length % 2 === 0);
-      const startX = fromLeft ? -nextW : state.w + nextW;
-
-      state.active = makeBlock(startX, startY, nextW, state.blockH, "#4ade80", true);
-      state.active.dir = fromLeft ? 1 : -1;
-
-      // Speed ramp
-      const add = Math.min(m.maxAdd, score * m.ramp);
-      state.speed = m.baseSpeed + add;
-
-      // Perfect tolerance tightens
-      const tighten = Math.floor(score / 20);
-      state.perfectTolerance = Math.max(m.perfectTolMin, m.perfectTolStart - tighten);
-    }
-
-    // ---------- Drawing ----------
-    function drawBackground() {
-      const g = ctx.createLinearGradient(0, 0, 0, state.h);
-      g.addColorStop(0, "#1b2c49");
-      g.addColorStop(1, "#08101d");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, state.w, state.h);
-
-      ctx.globalAlpha = 0.35;
-      ctx.fillStyle = "#fff";
-      for (let i = 0; i < 48; i++) {
-        const x = (i * 97) % state.w;
-        const y = (i * 53) % (state.h * 0.55);
-        ctx.fillRect(x, y, 1, 1);
+      // Service worker
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(()=>{}));
       }
-      ctx.globalAlpha = 1;
 
-      ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.fillRect(0, state.groundY, state.w, state.h - state.groundY);
-      ctx.fillStyle = "rgba(255,255,255,0.08)";
-      ctx.fillRect(0, state.groundY, state.w, 2);
-    }
+      // Audio (SFX + optional ambient music)
+      let audioCtx = null;
+      let musicNode = null;
+      let musicGain = null;
 
-    function drawBlock(b) {
-      const y = b.y - state.cameraY;
-
-      ctx.globalAlpha = 0.22;
-      ctx.fillStyle = "#000";
-      ctx.fillRect(b.x + 6, y + 8, b.w, b.h);
-      ctx.globalAlpha = 1;
-
-      ctx.fillStyle = b.color;
-      ctx.fillRect(b.x, y, b.w, b.h);
-
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(b.x + 6, y + 5, Math.max(0, b.w - 12), 4);
-      ctx.globalAlpha = 1;
-    }
-
-    function drawScene() {
-      drawBackground();
-
-      // silhouettes
-      ctx.globalAlpha = 0.10;
-      ctx.fillStyle = "#fff";
-      for (let i = 0; i < 14; i++) {
-        const bw = 18 + (i % 4) * 10;
-        const bh = 90 + (i % 6) * 26;
-        const bx = i * (state.w / 14);
-        ctx.fillRect(bx, state.groundY - bh, bw, bh);
+      function initAudio() {
+        if (!soundOn && !musicOn) return;
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
       }
-      ctx.globalAlpha = 1;
 
-      // stack
-      for (const b of state.stack) drawBlock(b);
-      for (const p of debris) drawBlock(p);
-      if (state.active) drawBlock(state.active);
+      function beep({ freq=440, dur=0.06, type="sine", vol=0.06 } = {}) {
+        if (!soundOn) return;
+        if (!audioCtx) return;
+        const t = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type;
+        // tiny detune to prevent fatigue
+        const detune = (Math.random() * 10) - 5;
+        o.frequency.setValueAtTime(freq + detune, t);
 
-      // hint
-      ctx.globalAlpha = 0.6;
-      ctx.fillStyle = "#fff";
-      ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
-      ctx.textAlign = "center";
-      const hint = paused ? "Paused" : (dropInProgress ? "Dropping..." : "Tap to drop");
-      ctx.fillText(hint, state.w / 2, 22);
-      ctx.globalAlpha = 1;
-    }
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
 
-    // ---------- Mechanics ----------
-    function beginDrop() {
-      if (!running || paused) return;
-      if (dropInProgress) return;
-      const a = state.active;
-      if (!a || !a.moving) return;
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(t); o.stop(t + dur + 0.02);
+      }
 
-      initAudio();
-      a.moving = false;
-      dropInProgress = true;
-    }
-
-    function awardPoints({ perfect }) {
-      const m = MODES[mode];
-      // Base point always
-      score += 1;
-
-      if (perfect) {
-        // Perfect bonus
-        score += 1;
-        perfectCombo += 1;
-
-        // Combo bonus every N perfects
-        if (perfectCombo > 0 && perfectCombo % m.comboEvery === 0) {
-          score += 1;
-          showToast(`Combo x${perfectCombo}! +1`);
-        } else {
-          showToast("Perfect! +1");
+      function sfx(name, streak=0) {
+        if (!soundOn) return;
+        // adaptive pitch: streak rewards
+        const boost = Math.min(220, streak * 22);
+        if (name === "place")  beep({ freq: 520 + boost*0.10, dur: 0.045, type: "square", vol: 0.04 });
+        if (name === "slice")  beep({ freq: 330, dur: 0.06, type: "sawtooth", vol: 0.035 });
+        if (name === "perfect") {
+          beep({ freq: 740 + boost*0.20, dur: 0.05, type: "triangle", vol: 0.06 });
+          setTimeout(() => beep({ freq: 990 + boost*0.20, dur: 0.06, type: "triangle", vol: 0.06 }), 55);
         }
-      } else {
-        // break combo on non-perfect
-        perfectCombo = 0;
+        if (name === "gameover") beep({ freq: 180, dur: 0.14, type: "sawtooth", vol: 0.05 });
+        if (name === "pause") beep({ freq: 260, dur: 0.07, type: "sine", vol: 0.03 });
+        if (name === "resume") beep({ freq: 460, dur: 0.06, type: "sine", vol: 0.03 });
       }
 
-      comboEl.textContent = String(perfectCombo);
-      scoreEl.textContent = String(score);
-
-      if (score > best) {
-        best = score;
-        localStorage.setItem(BEST_KEY, String(best));
-        bestEl.textContent = String(best);
-      }
-    }
-
-    function resolvePlacement() {
-      const a = state.active;
-      const prev = state.stack[state.stack.length - 1];
-
-      const left = Math.max(a.x, prev.x);
-      const right = Math.min(a.x + a.w, prev.x + prev.w);
-      const overlap = right - left;
-
-      if (overlap <= 0) {
-        running = false;
-        sfx("gameover");
-        haptic([30, 40, 30]);
-        showToast("Miss! Game Over", true);
-        showGameOver();
-        return;
+      function haptic(pattern=[10]) {
+        if (!hapticsOn) return;
+        if (navigator.vibrate) navigator.vibrate(pattern);
       }
 
-      const offset = Math.abs(a.x - prev.x);
-      const perfect = offset <= state.perfectTolerance;
+      function startMusic() {
+        if (!musicOn) return;
+        if (!audioCtx) return;
 
-      let placedX = left;
-      let placedW = overlap;
+        stopMusic();
 
-      if (perfect) {
-        placedX = prev.x;
-        placedW = prev.w;
+        // Simple ambient pad: low sine + triangle mix
+        const base = audioCtx.createOscillator();
+        base.type = "sine";
+        base.frequency.value = 110;
+
+        const harm = audioCtx.createOscillator();
+        harm.type = "triangle";
+        harm.frequency.value = 165;
+
+        musicGain = audioCtx.createGain();
+        musicGain.gain.value = 0.0001;
+
+        base.connect(musicGain);
+        harm.connect(musicGain);
+        musicGain.connect(audioCtx.destination);
+
+        const t = audioCtx.currentTime;
+        musicGain.gain.exponentialRampToValueAtTime(0.015, t + 0.4);
+
+        base.start();
+        harm.start();
+
+        musicNode = { base, harm };
       }
 
-      // overhang pieces (slice)
-      const overhangLeft = placedX - a.x;
-      const overhangRight = (a.x + a.w) - (placedX + placedW);
-      const targetY = prev.y - state.blockH;
-
-      if (!perfect && (overhangLeft > 0 || overhangRight > 0)) sfx("slice");
-
-      if (overhangLeft > 0) {
-        const fall = makeBlock(a.x, targetY, overhangLeft, a.h, "rgba(74,222,128,0.65)");
-        fall.vx = -3; fall.vy = 2;
-        addFallingPiece(fall);
-      }
-      if (overhangRight > 0) {
-        const fx = placedX + placedW;
-        const fall = makeBlock(fx, targetY, overhangRight, a.h, "rgba(74,222,128,0.65)");
-        fall.vx = 3; fall.vy = 2;
-        addFallingPiece(fall);
-      }
-
-      // lock
-      const placed = makeBlock(placedX, targetY, placedW, state.blockH, "rgba(255,255,255,0.16)");
-      state.stack.push(placed);
-
-      // feedback + scoring
-      sfx("place");
-      haptic([10]);
-      if (perfect) { sfx("perfect"); haptic([15, 30, 15]); }
-      awardPoints({ perfect });
-
-      // next
-      dropInProgress = false;
-      spawnActiveBlock();
-    }
-
-    // ---------- Pause ----------
-    function stopLoop() {
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-
-    function showPauseOverlay() {
-      overlay.innerHTML = `
-        <div class="card">
-          <h1>Paused</h1>
-          <p>Score: <b>${score}</b> • Combo: <b>${perfectCombo}</b><br/>Mode: <b>${MODES[mode].name}</b></p>
-          <div class="btnrow">
-            <button class="btn" id="resumeBtn">Resume</button>
-            <button class="btn secondary" id="restartBtn">Restart</button>
-            <button class="btn secondary" id="menuBtn">Main Menu</button>
-          </div>
-        </div>
-      `;
-      overlay.style.display = "grid";
-
-      document.getElementById("resumeBtn").addEventListener("click", () => {
-        overlay.style.display = "none";
-        paused = false;
-        pauseBtn.textContent = "⏸";
-        sfx("resume");
-        step();
-      });
-
-      document.getElementById("restartBtn").addEventListener("click", () => {
-        overlay.style.display = "none";
-        paused = false;
-        pauseBtn.textContent = "⏸";
-        resetGame();
-        step();
-      });
-
-      document.getElementById("menuBtn").addEventListener("click", () => location.reload());
-    }
-
-    pauseBtn.addEventListener("click", () => {
-      if (!running) return;
-      initAudio();
-      if (!paused) {
-        paused = true;
-        pauseBtn.textContent = "▶️";
-        sfx("pause");
-        showPauseOverlay();
-        stopLoop();
-      } else {
-        // if overlay was hidden for some reason, resume
-        overlay.style.display = "none";
-        paused = false;
-        pauseBtn.textContent = "⏸";
-        sfx("resume");
-        step();
-      }
-    });
-
-    // ---------- Game Over ----------
-    function showGameOver() {
-      if (gameOverShown) return;
-      gameOverShown = true;
-
-      overlay.innerHTML = `
-        <div class="card">
-          <h1>Game Over</h1>
-          <p>Your score: <b>${score}</b><br/>Best: <b>${best}</b><br/>Mode: <b>${MODES[mode].name}</b></p>
-          <div class="btnrow">
-            <button class="btn" id="restartBtn">Restart</button>
-            <button class="btn secondary" id="menuBtn">Main Menu</button>
-          </div>
-        </div>
-      `;
-      overlay.style.display = "grid";
-
-      document.getElementById("restartBtn").addEventListener("click", () => {
-        overlay.style.display = "none";
-        paused = false;
-        resetGame();
-        running = true;
-        step();
-      });
-
-      document.getElementById("menuBtn").addEventListener("click", () => location.reload());
-    }
-
-    // ---------- Main loop ----------
-    function step() {
-      if (!running || paused) return;
-
-      const { w, h } = resizeCanvasToDisplay();
-      state.w = w; state.h = h;
-      state.groundY = h - 90;
-
-      const a = state.active;
-
-      if (a) {
-        if (a.moving) {
-          a.x += a.dir * state.speed;
-          const pad = 26;
-          if (a.x < -a.w - pad) a.dir = 1;
-          if (a.x > state.w + pad) a.dir = -1;
-        } else if (dropInProgress) {
-          const prev = state.stack[state.stack.length - 1];
-          const targetY = prev.y - state.blockH;
-          a.y += state.dropSpeed;
-          if (a.y >= targetY) {
-            a.y = targetY;
-            resolvePlacement();
-          }
+      function stopMusic() {
+        if (musicNode) {
+          try { musicNode.base.stop(); } catch {}
+          try { musicNode.harm.stop(); } catch {}
+          musicNode = null;
+        }
+        if (musicGain) {
+          try { musicGain.disconnect(); } catch {}
+          musicGain = null;
         }
       }
 
-      // camera follow
-      const top = state.stack[state.stack.length - 1];
-      const targetCam = Math.max(0, (top.y - (state.h * 0.62)));
-      state.cameraY += (targetCam - state.cameraY) * 0.08;
+      // Canvas sizing
+      function resizeCanvasToDisplay() {
+        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.floor(rect.width * dpr);
+        const h = Math.floor(rect.height * dpr);
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w; canvas.height = h;
+        }
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.scale(dpr, dpr);
+        return { w: rect.width, h: rect.height };
+      }
 
-      updateDebris();
-      drawScene();
+      // Game state
+      let running=false, paused=false, dropInProgress=false, gameOverShown=false;
+      let score=0, level=1, streak=0;
+      let runType="classic"; // classic|daily|zen
+      let dailySeed=0;
+      let rafId=null;
 
-      rafId = requestAnimationFrame(step);
-    }
+      const state = {
+        w:0,h:0,groundY:0,
+        stack:[], active:null,
+        cameraY:0,
+        speed:2.2,
+        perfectTolerance:4,
+        blockH:26,
+        baseW:170,
+        dropSpeed:16,
+        gapY:70
+      };
 
-    // ---------- UI ----------
-    howBtn.addEventListener("click", () => {
-      howText.style.display = (howText.style.display === "none") ? "block" : "none";
-    });
+      // Camera shake (disabled in reduced motion)
+      let shake = 0;
+      function triggerShake(p=3){ if (!reducedMotion) shake = Math.max(shake, p); }
 
-    startBtn.addEventListener("click", () => {
-      initAudio();
-      overlay.style.display = "none";
-      applyModeUI();
-      resetGame();
-      running = true;
-      paused = false;
-      pauseBtn.textContent = "⏸";
-      step();
-    });
+      // Deterministic RNG for daily
+      function mulberry32(a){
+        return function() {
+          let t = a += 0x6D2B79F5;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        }
+      }
+      function todaySeed() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = d.getMonth()+1;
+        const day = d.getDate();
+        return (y*10000 + m*100 + day) >>> 0;
+      }
 
-    frame.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      if (!running || paused) return;
-      beginDrop();
-    }, { passive: false });
+      function runLabel() {
+        if (runType === "daily") return "Daily";
+        if (runType === "zen") return "Zen";
+        return "Classic";
+      }
+      function applyModeLabel() {
+        modeLabel.textContent = `Mode: ${MODES[mode].name} • ${runLabel()} • Level ${level}`;
+      }
 
-    // initial still frame behind overlay
-    (function initialDraw(){
-      const rect = resizeCanvasToDisplay();
-      state.w = rect.w; state.h = rect.h;
-      state.groundY = rect.h - 90;
-      drawBackground();
-    })();
-  </script>
-</body>
-</html>
+      function makeBlock(x,y,w,h,color,moving=false){
+        return { x,y,w,h,color,moving,dir:1,vx:0,vy:0 };
+      }
+
+      // Debris
+      const debris = [];
+      function addDebris(p){ debris.push(p); if (debris.length>14) debris.shift(); }
+      function updateDebris(){
+        for (let i = debris.length-1; i>=0; i--){
+          const p = debris[i];
+          p.vy += 0.75;
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.y - state.cameraY > state.h + 260) debris.splice(i,1);
+        }
+      }
+
+      // Progression
+      function computeLevel(){ level = Math.max(1, Math.floor(score/10) + 1); }
+      function applyDifficulty(){
+        const m = MODES[mode];
+        const add = Math.min(m.maxAdd, score * m.ramp);
+        const levelAdd = Math.min(1.6, (level-1) * 0.12);
+        state.speed = m.baseSpeed + add + levelAdd;
+
+        const tighten = Math.floor(score / 20) + Math.floor((level-1)/2);
+        state.perfectTolerance = Math.max(m.tolMin, m.tolStart - tighten);
+
+        state.dropSpeed = m.dropSpeed;
+      }
+
+      function resetGame(){
+        score=0; streak=0; level=1;
+        dropInProgress=false; gameOverShown=false;
+        debris.length=0;
+        scoreEl.textContent="0";
+        streakEl.textContent="0";
+        applyModeLabel();
+
+        const {w,h} = resizeCanvasToDisplay();
+        state.w=w; state.h=h;
+        state.groundY=h-90;
+        state.stack=[];
+        state.cameraY=0;
+
+        let baseW = state.baseW;
+        if (runType === "daily") {
+          const r = mulberry32(dailySeed)();
+          baseW = Math.round(state.baseW + (r*22 - 11));
+        }
+        const baseX = (w - baseW)/2;
+        state.stack.push(makeBlock(baseX, state.groundY - state.blockH, baseW, state.blockH, "rgba(255,255,255,0.14)"));
+        spawnActive();
+      }
+
+      function spawnActive(){
+        computeLevel();
+        applyDifficulty();
+        applyModeLabel();
+
+        const top = state.stack[state.stack.length-1];
+        let nextW = top.w;
+
+        if (runType === "daily") {
+          const rng = mulberry32(dailySeed + score + 101);
+          const tweak = (rng()*10)-5;
+          nextW = Math.max(60, nextW + tweak);
+        }
+
+        const targetY = top.y - state.blockH;
+        const startY = targetY - state.g
