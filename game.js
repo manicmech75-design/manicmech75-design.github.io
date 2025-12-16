@@ -25,18 +25,36 @@
 
   const soundToggleEl = $("soundToggle");
   const hapticToggleEl = $("hapticToggle");
+  const themeSelectEl = $("themeSelect");
 
   const offlineModalEl = $("offlineModal");
   const offlineTextEl = $("offlineText");
   const offlineOkEl = $("offlineOk");
 
+  const bodyEl = document.body;
+
   // State
-  const SAVE_KEY = "cityflip_save_v2";
+  const SAVE_KEY = "cityflip_save_v3";
 
   const TILE_NAMES = [
     "Downtown", "Suburbs", "Industrial",
     "Beach", "Airport", "Old Town",
     "Tech Park", "Harbor", "Hills"
+  ];
+
+  const TILE_ICONS = ["🏙️","🏘️","🏭","🏖️","✈️","🏛️","💻","⚓","⛰️"];
+
+  // Per-tile accent gradients (inline, so “art” changes per tile)
+  const TILE_GRADS = [
+    ["rgba(0,255,255,.95)", "rgba(120,0,255,.22)"],   // Downtown
+    ["rgba(0,200,255,.90)", "rgba(0,120,255,.18)"],   // Suburbs
+    ["rgba(255,150,0,.92)", "rgba(60,60,60,.22)"],    // Industrial
+    ["rgba(255,120,0,.92)", "rgba(255,0,140,.22)"],   // Beach
+    ["rgba(120,160,255,.95)", "rgba(30,40,80,.22)"],  // Airport
+    ["rgba(255,220,120,.92)", "rgba(120,60,0,.18)"],  // Old Town
+    ["rgba(0,255,160,.92)", "rgba(0,90,255,.18)"],    // Tech Park
+    ["rgba(0,190,255,.92)", "rgba(0,60,120,.20)"],    // Harbor
+    ["rgba(160,255,200,.92)", "rgba(0,120,80,.18)"]   // Hills
   ];
 
   const defaultState = () => ({
@@ -46,13 +64,14 @@
 
     tapBoostLevel: 0,
     passiveLevel: 0,
-    cityDevLevel: 0, // boosts all tiles
+    cityDevLevel: 0,
 
-    tiles: Array.from({ length: 9 }, () => ({ level: 0 })), // per-tile levels
+    tiles: Array.from({ length: 9 }, () => ({ level: 0 })),
 
     settings: {
       sound: true,
-      haptics: true
+      haptics: true,
+      theme: "neon"
     },
 
     lastTick: Date.now()
@@ -80,7 +99,7 @@
     while (logEl.children.length > 30) logEl.removeChild(logEl.lastChild);
   }
 
-  // Tiny click sound (no external files)
+  // Click sound (no external files)
   let audioCtx = null;
   function clickSound() {
     if (!state.settings.sound) return;
@@ -105,16 +124,22 @@
     }
   }
 
+  function applyTheme(theme) {
+    const allowed = new Set(["neon","sunset","emerald","midnight"]);
+    const t = allowed.has(theme) ? theme : "neon";
+    state.settings.theme = t;
+    bodyEl.setAttribute("data-theme", t);
+    if (themeSelectEl) themeSelectEl.value = t;
+  }
+
   // ---------- Tile math ----------
   function tileTapBonus(tileIndex) {
     const perTileLevel = state.tiles[tileIndex]?.level ?? 0;
-    // base bonus is 1, plus city development, plus per-tile level
     return 1 + state.cityDevLevel + perTileLevel;
   }
 
   function tileUpgradeCost(tileIndex) {
     const lvl = state.tiles[tileIndex]?.level ?? 0;
-    // slightly different base cost per tile so they feel distinct
     const base = 30 + tileIndex * 6;
     return Math.floor(base * Math.pow(1.65, lvl));
   }
@@ -131,18 +156,32 @@
       const tile = document.createElement("div");
       tile.className = "tile";
 
+      // per-tile accent gradient
+      const [c1, c2] = TILE_GRADS[i];
+      tile.style.background = `linear-gradient(180deg, ${c1}, ${c2})`;
+
       const top = document.createElement("div");
       top.className = "tileTop";
+
+      const left = document.createElement("div");
+      left.className = "tileLeft";
+
+      const icon = document.createElement("div");
+      icon.className = "tileIcon";
+      icon.textContent = TILE_ICONS[i];
 
       const name = document.createElement("div");
       name.className = "name";
       name.textContent = TILE_NAMES[i];
 
+      left.appendChild(icon);
+      left.appendChild(name);
+
       const lvl = document.createElement("div");
       lvl.className = "lvl";
       lvl.textContent = `Lv ${state.tiles[i]?.level ?? 0}`;
 
-      top.appendChild(name);
+      top.appendChild(left);
       top.appendChild(lvl);
 
       const small = document.createElement("div");
@@ -157,7 +196,6 @@
       upBtn.className = "tileBtn";
       upBtn.textContent = `Upgrade (${formatMoney(tileUpgradeCost(i))})`;
 
-      // Tap to earn
       tile.addEventListener("click", () => {
         const earned = tileTapEarn(i);
         state.cash += earned;
@@ -167,7 +205,6 @@
         maybeSaveSoon();
       });
 
-      // Upgrade button
       upBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         const cost = tileUpgradeCost(i);
@@ -208,9 +245,8 @@
 
     soundToggleEl.checked = !!state.settings.sound;
     hapticToggleEl.checked = !!state.settings.haptics;
+    if (themeSelectEl) themeSelectEl.value = state.settings.theme;
 
-    // Also update per-tile upgrade button states
-    // (quick pass: re-render ensures correct disabled text, but this helps without full re-render)
     const buttons = tilesEl.querySelectorAll(".tileBtn");
     buttons.forEach((btn, idx) => {
       const cost = tileUpgradeCost(idx);
@@ -230,7 +266,7 @@
     return Math.floor(75 * Math.pow(1.9, state.cityDevLevel));
   }
 
-  // ---------- Upgrade handlers ----------
+  // ---------- Upgrades ----------
   buyTapBoostBtn.addEventListener("click", () => {
     const cost = priceTapBoost();
     if (state.cash < cost) return;
@@ -277,7 +313,7 @@
     save();
   });
 
-  // ---------- Settings toggles ----------
+  // ---------- Settings ----------
   soundToggleEl.addEventListener("change", () => {
     state.settings.sound = !!soundToggleEl.checked;
     save();
@@ -288,6 +324,14 @@
     state.settings.haptics = !!hapticToggleEl.checked;
     save();
     if (state.settings.haptics) hapticTap();
+  });
+
+  themeSelectEl?.addEventListener("change", () => {
+    applyTheme(themeSelectEl.value);
+    clickSound();
+    hapticTap();
+    log(`Theme set to ${state.settings.theme}.`);
+    save();
   });
 
   // ---------- Passive loop + offline catch-up ----------
@@ -315,9 +359,7 @@
 
   // ---------- Save / Load ----------
   function save() {
-    try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-    } catch (e) {}
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {}
   }
 
   function load() {
@@ -327,12 +369,9 @@
       const obj = JSON.parse(raw);
       if (!obj || typeof obj !== "object") return null;
       return obj;
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 
-  // Autosave throttle
   let saveTimer = null;
   function maybeSaveSoon() {
     if (saveTimer) return;
@@ -361,7 +400,6 @@
       const obj = JSON.parse(data);
       if (!obj || typeof obj !== "object") throw new Error("bad");
 
-      // merge safely
       state = { ...defaultState(), ...obj };
       state.tiles = Array.isArray(obj.tiles) && obj.tiles.length === 9
         ? obj.tiles.map(t => ({ level: Math.max(0, (t?.level ?? 0) | 0) }))
@@ -369,6 +407,8 @@
 
       state.settings = { ...defaultState().settings, ...(obj.settings || {}) };
       state.lastTick = Date.now();
+
+      applyTheme(state.settings.theme);
 
       save();
       renderTiles();
@@ -383,13 +423,13 @@
   resetBtn.addEventListener("click", () => {
     if (!confirm("Reset all progress?")) return;
     state = defaultState();
+    applyTheme(state.settings.theme);
     save();
     renderTiles();
     updateUI();
     log("Progress reset.");
   });
 
-  // Save on background/close
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") save();
   });
@@ -412,7 +452,7 @@
 
   // ---------- Init ----------
   (function init() {
-    // Ensure shape (older saves)
+    // normalize shapes (older saves)
     if (!Array.isArray(state.tiles) || state.tiles.length !== 9) {
       state.tiles = defaultState().tiles;
     } else {
@@ -420,11 +460,15 @@
     }
     state.settings = { ...defaultState().settings, ...(state.settings || {}) };
 
-    // Offline earnings (cap at 8 hours)
+    applyTheme(state.settings.theme);
+
+    // set controls
+    if (themeSelectEl) themeSelectEl.value = state.settings.theme;
+
+    // Offline earnings (cap 8 hours)
     const now = Date.now();
     const last = state.lastTick || now;
     const offlineSec = Math.min(8 * 3600, Math.max(0, (now - last) / 1000));
-
     if (offlineSec > 1 && state.perSec > 0) {
       const earned = state.perSec * offlineSec;
       state.cash += earned;
@@ -436,10 +480,10 @@
 
     renderTiles();
     updateUI();
-    log("Game loaded. Tap tiles to earn. Upgrade tiles for bigger bonuses.");
+    log("Skins added! Pick a theme on the right.");
 
     setInterval(tick, 250);
     setInterval(save, 6000);
-    save(); // initial
+    save();
   })();
 })();
