@@ -31,15 +31,22 @@
   const offlineOkEl = $("offlineOk");
 
   // Reward / boost UI
-  const rewardBtn = $("rewardBtn");
-  const rewardStatus = $("rewardStatus");
+  const rewardBtn = $("rewardBtn");         // may not exist in this file; safe-check below
+  const rewardStatus = $("rewardStatus");   // safe-check below
   const boostBar = $("boostBar");
   const boostPill = $("boostPill");
+
+  // Daily + Achievements
+  const claimDailyBtn = $("claimDailyBtn");
+  const streakTitle = $("streakTitle");
+  const streakDesc = $("streakDesc");
+  const streakStatus = $("streakStatus");
+  const achListEl = $("achList");
 
   const bodyEl = document.body;
 
   // State
-  const SAVE_KEY = "cityflip_save_v4";
+  const SAVE_KEY = "cityflip_save_v5";
 
   const TILE_NAMES = [
     "Downtown", "Suburbs", "Industrial",
@@ -70,11 +77,34 @@
 
     tiles: Array.from({ length: 9 }, () => ({ level: 0 })),
 
-    // Reward boost state
+    // Reward boost state (kept for compatibility; reward button optional)
     boost: {
       mult: 1,
       endsAt: 0,
       cooldownEndsAt: 0
+    },
+
+    // Daily streak
+    daily: {
+      streak: 0,
+      lastClaimDay: "", // YYYY-MM-DD in local time
+    },
+
+    // Stats for achievements
+    stats: {
+      taps: 0,
+      totalEarned: 0
+    },
+
+    // Achievement flags
+    achievements: {
+      firstTap: false,
+      firstUpgrade: false,
+      firstPassive: false,
+      earn10k: false,
+      tap1000: false,
+      streak3: false,
+      streak7: false
     },
 
     settings: {
@@ -103,6 +133,25 @@
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  }
+
+  function todayKey() {
+    // local date key
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function daysBetween(olderKey, newerKey) {
+    // parse YYYY-MM-DD in local time
+    if (!olderKey) return 9999;
+    const [oy, om, od] = olderKey.split("-").map(Number);
+    const [ny, nm, nd] = newerKey.split("-").map(Number);
+    const a = new Date(oy, om - 1, od).getTime();
+    const b = new Date(ny, nm - 1, nd).getTime();
+    return Math.floor((b - a) / 86400000);
   }
 
   function log(msg) {
@@ -152,54 +201,134 @@
     return (state.boost.endsAt && now < state.boost.endsAt) ? (state.boost.mult || 2) : 1;
   }
 
-  function activateBoost(mult, seconds) {
-    const now = Date.now();
-    state.boost.mult = mult;
-    state.boost.endsAt = now + seconds * 1000;
-    // cooldown: 5 minutes (adjust later)
-    state.boost.cooldownEndsAt = now + 5 * 60 * 1000;
-    log(`Reward boost activated: ${mult}x for ${seconds}s.`);
-    save();
-    updateUI();
-  }
-
-  // Simulated "watch ad"
-  rewardBtn.addEventListener("click", () => {
-    const now = Date.now();
-    if (now < (state.boost.cooldownEndsAt || 0)) return;
-
-    clickSound();
-    hapticTap();
-
-    // Simulate reward ad completion
-    // Later you swap this with a real rewarded-ad callback.
-    activateBoost(2, 60);
-    rewardStatus.textContent = "Boost running";
-  });
-
   function updateBoostUI() {
     const now = Date.now();
     const active = state.boost.endsAt && now < state.boost.endsAt;
-    const cd = state.boost.cooldownEndsAt && now < state.boost.cooldownEndsAt;
 
     if (active) {
       boostBar.style.display = "flex";
       const remaining = (state.boost.endsAt - now) / 1000;
       boostPill.textContent = `${state.boost.mult || 2}x • ${fmtTime(remaining)}`;
-      rewardBtn.disabled = true;
-      rewardStatus.textContent = "Boost active";
     } else {
       boostBar.style.display = "none";
-      if (cd) {
-        const cdLeft = (state.boost.cooldownEndsAt - now) / 1000;
-        rewardBtn.disabled = true;
-        rewardStatus.textContent = `Cooldown: ${fmtTime(cdLeft)}`;
-      } else {
-        rewardBtn.disabled = false;
-        rewardStatus.textContent = "Ready";
-      }
     }
   }
+
+  // ---------- Achievements ----------
+  const ACH_LIST = [
+    { key: "firstTap",      title: "First Tap",        desc: "Tap any tile once." },
+    { key: "firstUpgrade",  title: "First Upgrade",    desc: "Upgrade any tile once." },
+    { key: "firstPassive",  title: "Passive Income",   desc: "Buy your first passive upgrade." },
+    { key: "earn10k",       title: "Big Money",        desc: "Earn $10K total (lifetime)." },
+    { key: "tap1000",       title: "Tap Machine",      desc: "Tap 1,000 times." },
+    { key: "streak3",       title: "3-Day Streak",     desc: "Claim daily reward 3 days in a row." },
+    { key: "streak7",       title: "7-Day Streak",     desc: "Claim daily reward 7 days in a row." }
+  ];
+
+  function unlockAch(key) {
+    if (state.achievements[key]) return;
+    state.achievements[key] = true;
+    log(`🏆 Achievement unlocked: ${ACH_LIST.find(a=>a.key===key)?.title ?? key}`);
+    clickSound();
+    hapticTap();
+    save();
+    renderAchievements();
+  }
+
+  function checkAchievements() {
+    if (state.stats.taps >= 1) unlockAch("firstTap");
+    if (state.stats.totalEarned >= 10000) unlockAch("earn10k");
+    if (state.stats.taps >= 1000) unlockAch("tap1000");
+    if (state.daily.streak >= 3) unlockAch("streak3");
+    if (state.daily.streak >= 7) unlockAch("streak7");
+  }
+
+  function renderAchievements() {
+    if (!achListEl) return;
+    achListEl.innerHTML = "";
+    for (const a of ACH_LIST) {
+      const row = document.createElement("div");
+      row.className = "achItem";
+
+      const left = document.createElement("div");
+      left.className = "left";
+
+      const t = document.createElement("div");
+      t.textContent = a.title;
+
+      const d = document.createElement("small");
+      d.textContent = a.desc;
+
+      left.appendChild(t);
+      left.appendChild(d);
+
+      const badge = document.createElement("div");
+      const done = !!state.achievements[a.key];
+      badge.className = "badge" + (done ? " done" : "");
+      badge.textContent = done ? "Unlocked" : "Locked";
+
+      row.appendChild(left);
+      row.appendChild(badge);
+      achListEl.appendChild(row);
+    }
+  }
+
+  // ---------- Daily streak ----------
+  function dailyRewardAmount(dayNumber) {
+    // Day 1..7 then repeat at 7
+    const d = Math.max(1, Math.min(7, dayNumber));
+    const base = 200 * d; // scales with streak day
+    // also scales a bit with your current game to stay relevant
+    const scale = 1 + (state.cityDevLevel * 0.15) + (state.passiveLevel * 0.10);
+    return Math.floor(base * scale);
+  }
+
+  function updateDailyUI() {
+    const t = todayKey();
+    const gap = daysBetween(state.daily.lastClaimDay, t);
+    const already = (gap === 0);
+    const canClaim = !already;
+
+    // If they missed a day, show “streak will reset”
+    const willReset = (state.daily.lastClaimDay && gap >= 2);
+
+    const nextDay = willReset ? 1 : (state.daily.streak + 1);
+    const amt = dailyRewardAmount(nextDay);
+
+    if (streakTitle) streakTitle.textContent = `Day ${nextDay} Reward`;
+    if (streakDesc) streakDesc.textContent = `Claim ${formatMoney(amt)}. Current streak: ${state.daily.streak} day(s).`;
+    if (streakStatus) streakStatus.textContent = already ? "Claimed today" : (willReset ? "Missed a day (resets)" : "Ready");
+    if (claimDailyBtn) claimDailyBtn.disabled = !canClaim;
+  }
+
+  function claimDaily() {
+    const t = todayKey();
+    const gap = daysBetween(state.daily.lastClaimDay, t);
+    if (gap === 0) return; // already claimed
+
+    // If missed 2+ days, reset streak
+    if (state.daily.lastClaimDay && gap >= 2) {
+      state.daily.streak = 0;
+    }
+
+    state.daily.streak += 1;
+    state.daily.lastClaimDay = t;
+
+    const amt = dailyRewardAmount(state.daily.streak);
+    state.cash += amt;
+    state.stats.totalEarned += amt;
+
+    log(`🎁 Daily claimed! +${formatMoney(amt)} (Streak: ${state.daily.streak})`);
+    clickSound();
+    hapticTap();
+    save();
+
+    updateUI();
+    renderTiles(); // update button states
+    checkAchievements();
+  }
+
+  claimDailyBtn?.addEventListener("click", claimDaily);
 
   // ---------- Tile math ----------
   function tileTapBonus(tileIndex) {
@@ -267,10 +396,16 @@
       tile.addEventListener("click", () => {
         const earned = tileTapEarn(i);
         state.cash += earned;
+
+        state.stats.taps += 1;
+        state.stats.totalEarned += earned;
+
         clickSound();
         hapticTap();
+
         updateUI();
         maybeSaveSoon();
+        checkAchievements();
       });
 
       upBtn.addEventListener("click", (e) => {
@@ -281,9 +416,12 @@
         state.cash -= cost;
         state.tiles[i].level += 1;
 
+        unlockAch("firstUpgrade");
+
         clickSound();
         hapticTap();
         log(`${TILE_NAMES[i]} upgraded to Lv ${state.tiles[i].level}.`);
+
         renderTiles();
         updateUI();
         save();
@@ -323,6 +461,7 @@
     });
 
     updateBoostUI();
+    updateDailyUI();
   }
 
   // ---------- Prices ----------
@@ -348,6 +487,7 @@
     state.cash -= cost;
     state.passiveLevel += 1;
     state.perSec += 1 + Math.floor(state.passiveLevel / 3);
+    unlockAch("firstPassive");
     clickSound(); hapticTap();
     log(`Bought Passive Income (Lv ${state.passiveLevel}).`);
     updateUI(); save();
@@ -375,11 +515,15 @@
     state.lastTick = now;
 
     if (dt > 0 && state.perSec > 0) {
-      state.cash += (state.perSec * boostMult()) * dt;
+      const earned = (state.perSec * boostMult()) * dt;
+      state.cash += earned;
+      state.stats.totalEarned += earned;
       updateUI();
       maybeSaveSoon();
+      checkAchievements();
     } else {
       updateBoostUI();
+      updateDailyUI();
     }
   }
 
@@ -421,19 +565,26 @@
       const obj = JSON.parse(data);
       if (!obj || typeof obj !== "object") throw new Error("bad");
 
-      state = { ...defaultState(), ...obj };
+      const d = defaultState();
+      state = { ...d, ...obj };
+
       state.tiles = Array.isArray(obj.tiles) && obj.tiles.length === 9
         ? obj.tiles.map(t => ({ level: Math.max(0, (t?.level ?? 0) | 0) }))
-        : defaultState().tiles;
+        : d.tiles;
 
-      state.settings = { ...defaultState().settings, ...(obj.settings || {}) };
-      state.boost = { ...defaultState().boost, ...(obj.boost || {}) };
+      state.settings = { ...d.settings, ...(obj.settings || {}) };
+      state.boost = { ...d.boost, ...(obj.boost || {}) };
+      state.daily = { ...d.daily, ...(obj.daily || {}) };
+      state.stats = { ...d.stats, ...(obj.stats || {}) };
+      state.achievements = { ...d.achievements, ...(obj.achievements || {}) };
+
       state.lastTick = Date.now();
 
       applyTheme(state.settings.theme);
 
-      save(); renderTiles(); updateUI();
+      save(); renderTiles(); updateUI(); renderAchievements();
       log("Imported save successfully.");
+      checkAchievements();
     } catch (e) {
       log("Import failed (invalid data).");
       alert("Import failed. Data was not valid.");
@@ -444,7 +595,7 @@
     if (!confirm("Reset all progress?")) return;
     state = defaultState();
     applyTheme(state.settings.theme);
-    save(); renderTiles(); updateUI();
+    save(); renderTiles(); updateUI(); renderAchievements();
     log("Progress reset.");
   });
 
@@ -467,20 +618,19 @@
   });
 
   // ---------- Init ----------
-  function defaultStateSafe() {
+  (function init() {
+    // normalize shapes
     const d = defaultState();
-    // merge/normalize
     if (!Array.isArray(state.tiles) || state.tiles.length !== 9) state.tiles = d.tiles;
     else state.tiles = state.tiles.map(t => ({ level: Math.max(0, (t?.level ?? 0) | 0) }));
 
     state.settings = { ...d.settings, ...(state.settings || {}) };
     state.boost = { ...d.boost, ...(state.boost || {}) };
+    state.daily = { ...d.daily, ...(state.daily || {}) };
+    state.stats = { ...d.stats, ...(state.stats || {}) };
+    state.achievements = { ...d.achievements, ...(state.achievements || {}) };
 
     applyTheme(state.settings.theme);
-  }
-
-  (function init() {
-    defaultStateSafe();
 
     // Offline earnings (cap 8 hours)
     const now = Date.now();
@@ -489,14 +639,17 @@
     if (offlineSec > 1 && state.perSec > 0) {
       const earned = (state.perSec * boostMult()) * offlineSec;
       state.cash += earned;
+      state.stats.totalEarned += earned;
       showOfflineModal(earned);
       log(`Welcome back! Offline earnings: ${formatMoney(earned)}.`);
     }
     state.lastTick = now;
 
     renderTiles();
+    renderAchievements();
     updateUI();
-    log("Ad-ready layout added: banner slot + reward boost button.");
+    checkAchievements();
+    log("Daily streak + achievements added!");
 
     setInterval(tick, 250);
     setInterval(save, 6000);
