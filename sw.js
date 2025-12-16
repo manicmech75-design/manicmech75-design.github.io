@@ -1,51 +1,29 @@
-const CACHE = "flipcity-cache-v5"; // bump version to force refresh
-const OFFLINE_URL = "./offline.html";
+// sw.js — FORCE UPDATE + CLEAR OLD CACHES (best for debugging on GitHub Pages)
 
-const CORE = [
-  "./",
-  "./index.html",
-  "./game.js",
-  "./manifest.webmanifest",
-  "./offline.html",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
-];
+const VERSION = "v2025-12-15-01"; // <-- change this every time you deploy
+const CACHE_ALLOWLIST = new Set([`flipcity-${VERSION}`]);
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(CORE))
-  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.map((key) => (key === CACHE ? null : caches.delete(key)))
-      )
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((k) => (CACHE_ALLOWLIST.has(k) ? null : caches.delete(k))));
+    await self.clients.claim();
+  })());
 });
 
+// IMPORTANT: do NOT cache HTML or JS while you're debugging.
+// Let the network always win for navigations + scripts.
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const req = event.request;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request)
-          .then((response) => {
-            const copy = response.clone();
-            caches.open(CACHE).then((cache) =>
-              cache.put(event.request, copy)
-            );
-            return response;
-          })
-          .catch(() => caches.match(OFFLINE_URL))
-      );
-    })
-  );
+  const isNav = req.mode === "navigate";
+  const isScript = req.destination === "script";
+
+  if (isNav || isScript) return; // network by default
+
+  event.respondWith(fetch(req));
 });
