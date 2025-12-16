@@ -13,12 +13,54 @@
 
   <style>
     * { box-sizing: border-box; }
+
+    /* ---------- THEMES (CSS variables) ---------- */
+    :root{
+      --bg1:#1a2a44;
+      --bg2:#0b1220;
+      --card: rgba(255,255,255,.06);
+      --cardBorder: rgba(255,255,255,.10);
+      --panel: rgba(0,0,0,.18);
+      --panelBorder: rgba(255,255,255,.08);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,.85);
+
+      --btn: #ffffff;
+      --btnText:#0b1220;
+
+      --tileA1: rgba(30,144,255,.95);
+      --tileA2: rgba(30,144,255,.35);
+
+      --glow: rgba(0,255,255,.18);
+    }
+    body[data-theme="neon"]{
+      --bg1:#22124a; --bg2:#050617;
+      --glow: rgba(0,255,255,.22);
+    }
+    body[data-theme="sunset"]{
+      --bg1:#3a1035; --bg2:#120612;
+      --tileA1: rgba(255,128,0,.95);
+      --tileA2: rgba(255,0,128,.30);
+      --glow: rgba(255,128,0,.18);
+    }
+    body[data-theme="emerald"]{
+      --bg1:#08362a; --bg2:#041411;
+      --tileA1: rgba(0,220,140,.92);
+      --tileA2: rgba(0,120,255,.25);
+      --glow: rgba(0,220,140,.18);
+    }
+    body[data-theme="midnight"]{
+      --bg1:#0f1b2a; --bg2:#060a12;
+      --card: rgba(255,255,255,.05);
+      --glow: rgba(120,160,255,.16);
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #1a2a44, #0b1220);
-      color: #fff;
+      background: radial-gradient(circle at top, var(--bg1), var(--bg2));
+      color: var(--text);
     }
 
     header {
@@ -40,10 +82,11 @@
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
 
     .card {
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.10);
+      background: var(--card);
+      border: 1px solid var(--cardBorder);
       border-radius: 14px;
       padding: 14px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.02), 0 18px 60px var(--glow);
     }
 
     .stats {
@@ -56,11 +99,11 @@
     .stat {
       padding: 12px;
       border-radius: 12px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.08);
+      background: var(--panel);
+      border: 1px solid var(--panelBorder);
     }
     .stat .label { opacity: .8; font-size: 12px; }
-    .stat .value { font-size: 20px; margin-top: 6px; font-weight: 700; }
+    .stat .value { font-size: 20px; margin-top: 6px; font-weight: 800; }
 
     .tiles {
       margin-top: 12px;
@@ -70,11 +113,10 @@
     }
 
     .tile {
-      background: linear-gradient(180deg, rgba(30,144,255,.9), rgba(30,144,255,.45));
       border: 1px solid rgba(255,255,255,.16);
       border-radius: 14px;
       padding: 12px;
-      min-height: 108px;
+      min-height: 120px;
       cursor: pointer;
       user-select: none;
       transition: transform .06s ease, filter .12s ease;
@@ -82,39 +124,57 @@
       flex-direction: column;
       justify-content: space-between;
       gap: 8px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, var(--tileA1), var(--tileA2));
     }
-    .tile:active { transform: scale(.98); filter: brightness(1.05); }
+    .tile::after{
+      content:"";
+      position:absolute;
+      inset:-40px -40px auto auto;
+      width:120px; height:120px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), transparent 60%);
+      transform: rotate(20deg);
+      pointer-events:none;
+    }
+    .tile:active { transform: scale(.98); filter: brightness(1.06); }
 
     .tileTop { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-    .tile .name { font-weight: 900; letter-spacing: .2px; }
-    .tile .lvl { opacity: .92; font-size: 12px; font-weight: 800; }
-    .tile .small { opacity: .9; font-size: 12px; line-height: 1.2; }
-    .tile .gain { font-size: 14px; font-weight: 900; }
+    .tileLeft { display:flex; align-items:center; gap:10px; }
+    .tileIcon {
+      width: 34px; height: 34px;
+      display:grid; place-items:center;
+      border-radius: 12px;
+      background: rgba(0,0,0,.20);
+      border: 1px solid rgba(255,255,255,.18);
+      font-size: 18px;
+    }
+    .tile .name { font-weight: 950; letter-spacing: .2px; }
+    .tile .lvl { opacity: .92; font-size: 12px; font-weight: 900; }
+    .tile .small { opacity: .9; font-size: 12px; line-height: 1.2; color: var(--muted); }
+    .tile .gain { font-size: 14px; font-weight: 950; }
 
     .tileBtn {
       width: 100%;
       border: 0;
       border-radius: 12px;
       padding: 10px 12px;
-      font-weight: 900;
+      font-weight: 950;
       cursor: pointer;
-      color: #0b1220;
-      background: #fff;
+      color: var(--btnText);
+      background: var(--btn);
     }
-    .tileBtn:disabled {
-      opacity: .55;
-      cursor: not-allowed;
-    }
+    .tileBtn:disabled { opacity: .55; cursor: not-allowed; }
 
     .btnrow { display: flex; flex-wrap: wrap; gap: 10px; }
     button.headerBtn {
       border: 0;
       border-radius: 12px;
       padding: 10px 12px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
-      color: #0b1220;
-      background: #fff;
+      color: var(--btnText);
+      background: var(--btn);
     }
     button.headerBtn.secondary {
       color: #fff;
@@ -130,34 +190,48 @@
     .shopItem {
       padding: 12px;
       border-radius: 12px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.08);
+      background: var(--panel);
+      border: 1px solid var(--panelBorder);
       margin-top: 10px;
     }
     .shopItem h3 { margin: 0 0 6px; font-size: 15px; }
-    .shopItem p { margin: 0; opacity: .9; font-size: 13px; }
-    .shopItem .price { margin-top: 8px; font-weight: 900; }
-    .shopItem .shopBtn { margin-top: 10px; width: 100%; border-radius: 12px; padding: 10px 12px; font-weight: 900; cursor: pointer; }
+    .shopItem p { margin: 0; opacity: .9; font-size: 13px; color: var(--muted); }
+    .shopItem .price { margin-top: 8px; font-weight: 950; }
+    .shopItem .shopBtn {
+      margin-top: 10px; width: 100%;
+      border: 0; border-radius: 12px;
+      padding: 10px 12px; font-weight: 950;
+      cursor: pointer; color: var(--btnText); background: var(--btn);
+    }
 
-    .toggles {
-      margin-top: 12px;
-      display: grid;
-      gap: 10px;
-    }
+    .toggles { margin-top: 12px; display: grid; gap: 10px; }
     .toggleRow {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.08);
-      font-size: 14px;
-      font-weight: 800;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 12px; border-radius: 12px;
+      background: var(--panel); border: 1px solid var(--panelBorder);
+      font-size: 14px; font-weight: 900;
     }
-    .toggleRow small { opacity: .85; font-weight: 700; }
+    .toggleRow small { opacity: .85; font-weight: 800; color: var(--muted); }
     .toggleRow input { transform: scale(1.2); }
+
+    .selectRow {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding: 10px 12px; border-radius: 12px;
+      background: var(--panel); border: 1px solid var(--panelBorder);
+      margin-top: 10px;
+      font-weight: 900;
+    }
+    select {
+      width: 160px;
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color: #fff;
+      font-weight: 900;
+      outline: none;
+    }
+    option { color: #000; }
 
     .log {
       margin-top: 10px;
@@ -174,8 +248,7 @@
 
     /* Offline modal */
     .modalBackdrop {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: rgba(0,0,0,.55);
       display: none;
       align-items: center;
@@ -190,23 +263,24 @@
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 16px;
       padding: 14px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.55);
     }
     .modal h3 { margin: 0 0 8px; }
-    .modal p { margin: 0 0 12px; opacity: .92; }
+    .modal p { margin: 0 0 12px; opacity: .92; color: var(--muted); }
     .modal .modalBtn {
       width: 100%;
       border: 0;
       border-radius: 12px;
       padding: 10px 12px;
-      font-weight: 900;
+      font-weight: 950;
       cursor: pointer;
-      color: #0b1220;
-      background: #fff;
+      color: var(--btnText);
+      background: var(--btn);
     }
   </style>
 </head>
 
-<body>
+<body data-theme="neon">
   <header>
     <h1>City Flip</h1>
     <div class="btnrow">
@@ -267,17 +341,24 @@
           <button class="shopBtn" id="buyTileUp">Buy</button>
         </div>
 
+        <h2 style="margin:16px 0 10px;">Skins</h2>
+        <div class="selectRow">
+          <div>Theme</div>
+          <select id="themeSelect">
+            <option value="neon">Neon</option>
+            <option value="sunset">Sunset</option>
+            <option value="emerald">Emerald</option>
+            <option value="midnight">Midnight</option>
+          </select>
+        </div>
+
         <div class="toggles">
           <div class="toggleRow">
-            <div>
-              Sound <br><small>Tap “click” feedback</small>
-            </div>
+            <div>Sound <br><small>Tap “click” feedback</small></div>
             <input type="checkbox" id="soundToggle">
           </div>
           <div class="toggleRow">
-            <div>
-              Haptics <br><small>Vibrate on tap</small>
-            </div>
+            <div>Haptics <br><small>Vibrate on tap</small></div>
             <input type="checkbox" id="hapticToggle">
           </div>
         </div>
@@ -299,7 +380,6 @@
   </div>
 
   <script>
-    // Register Service Worker (PWA offline)
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("/sw.js").catch(()=>{});
