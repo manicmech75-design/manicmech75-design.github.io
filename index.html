@@ -20,6 +20,7 @@
       background: radial-gradient(circle at top, #1a2a44, #0b1220);
       color: #fff;
     }
+
     header {
       padding: 14px 14px 10px;
       display: flex;
@@ -31,18 +32,11 @@
       top: 0;
       background: rgba(11,18,32,.85);
       backdrop-filter: blur(10px);
+      z-index: 5;
     }
-    header h1 {
-      margin: 0;
-      font-size: 18px;
-      letter-spacing: .3px;
-    }
+    header h1 { margin: 0; font-size: 18px; letter-spacing: .3px; }
     .wrap { max-width: 980px; margin: 0 auto; padding: 14px; }
-    .grid {
-      display: grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap: 14px;
-    }
+    .grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
 
     .card {
@@ -74,40 +68,60 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
     }
+
     .tile {
       background: linear-gradient(180deg, rgba(30,144,255,.9), rgba(30,144,255,.45));
       border: 1px solid rgba(255,255,255,.16);
       border-radius: 14px;
-      padding: 16px 12px;
-      min-height: 86px;
+      padding: 12px;
+      min-height: 108px;
       cursor: pointer;
       user-select: none;
       transition: transform .06s ease, filter .12s ease;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      gap: 8px;
     }
     .tile:active { transform: scale(.98); filter: brightness(1.05); }
-    .tile .name { font-weight: 800; letter-spacing: .2px; }
-    .tile .small { opacity: .9; font-size: 12px; }
-    .tile .gain { margin-top: 6px; font-size: 14px; font-weight: 700; }
 
-    .btnrow { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-    button {
+    .tileTop { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .tile .name { font-weight: 900; letter-spacing: .2px; }
+    .tile .lvl { opacity: .92; font-size: 12px; font-weight: 800; }
+    .tile .small { opacity: .9; font-size: 12px; line-height: 1.2; }
+    .tile .gain { font-size: 14px; font-weight: 900; }
+
+    .tileBtn {
+      width: 100%;
       border: 0;
       border-radius: 12px;
       padding: 10px 12px;
-      font-weight: 700;
+      font-weight: 900;
       cursor: pointer;
       color: #0b1220;
       background: #fff;
     }
-    button.secondary {
+    .tileBtn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .btnrow { display: flex; flex-wrap: wrap; gap: 10px; }
+    button.headerBtn {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #0b1220;
+      background: #fff;
+    }
+    button.headerBtn.secondary {
       color: #fff;
       background: rgba(255,255,255,.12);
       border: 1px solid rgba(255,255,255,.18);
     }
-    button.danger {
+    button.headerBtn.danger {
       color: #fff;
       background: rgba(255, 80, 80, .25);
       border: 1px solid rgba(255, 80, 80, .45);
@@ -122,8 +136,28 @@
     }
     .shopItem h3 { margin: 0 0 6px; font-size: 15px; }
     .shopItem p { margin: 0; opacity: .9; font-size: 13px; }
-    .shopItem .price { margin-top: 8px; font-weight: 800; }
-    .shopItem .shopBtn { margin-top: 10px; width: 100%; }
+    .shopItem .price { margin-top: 8px; font-weight: 900; }
+    .shopItem .shopBtn { margin-top: 10px; width: 100%; border-radius: 12px; padding: 10px 12px; font-weight: 900; cursor: pointer; }
+
+    .toggles {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+    .toggleRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .toggleRow small { opacity: .85; font-weight: 700; }
+    .toggleRow input { transform: scale(1.2); }
 
     .log {
       margin-top: 10px;
@@ -137,6 +171,38 @@
       background: rgba(0,0,0,.22);
       border: 1px solid rgba(255,255,255,.08);
     }
+
+    /* Offline modal */
+    .modalBackdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 20;
+    }
+    .modal {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(11,18,32,.96);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .modal h3 { margin: 0 0 8px; }
+    .modal p { margin: 0 0 12px; opacity: .92; }
+    .modal .modalBtn {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: #0b1220;
+      background: #fff;
+    }
   </style>
 </head>
 
@@ -144,10 +210,10 @@
   <header>
     <h1>City Flip</h1>
     <div class="btnrow">
-      <button id="installBtn" class="secondary" style="display:none;">Install</button>
-      <button id="exportBtn" class="secondary">Export</button>
-      <button id="importBtn" class="secondary">Import</button>
-      <button id="resetBtn" class="danger">Reset</button>
+      <button id="installBtn" class="headerBtn secondary" style="display:none;">Install</button>
+      <button id="exportBtn" class="headerBtn secondary">Export</button>
+      <button id="importBtn" class="headerBtn secondary">Import</button>
+      <button id="resetBtn" class="headerBtn danger">Reset</button>
     </div>
   </header>
 
@@ -195,16 +261,40 @@
         </div>
 
         <div class="shopItem">
-          <h3>Tile Upgrade</h3>
-          <p>Each level increases tile earnings.</p>
+          <h3>City Development</h3>
+          <p>Boosts ALL tile tap bonuses.</p>
           <div class="price" id="tileUpPrice">$75</div>
           <button class="shopBtn" id="buyTileUp">Buy</button>
+        </div>
+
+        <div class="toggles">
+          <div class="toggleRow">
+            <div>
+              Sound <br><small>Tap “click” feedback</small>
+            </div>
+            <input type="checkbox" id="soundToggle">
+          </div>
+          <div class="toggleRow">
+            <div>
+              Haptics <br><small>Vibrate on tap</small>
+            </div>
+            <input type="checkbox" id="hapticToggle">
+          </div>
         </div>
 
         <p style="margin-top:12px;opacity:.85;font-size:13px;">
           Autosaves every few seconds + on background/close.
         </p>
       </div>
+    </div>
+  </div>
+
+  <!-- Offline earnings modal -->
+  <div class="modalBackdrop" id="offlineModal">
+    <div class="modal">
+      <h3>Welcome back!</h3>
+      <p id="offlineText">You earned $0 while away.</p>
+      <button class="modalBtn" id="offlineOk">Collect</button>
     </div>
   </div>
 
