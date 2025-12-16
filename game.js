@@ -1,105 +1,179 @@
-const SAVE_KEY = "flip_city_save";
+/* Flip City - Step 1: Tile purchase + building placement (House)
+   - Tap Empty Lot (25) to buy -> becomes a House
+   - Deducts cash, increases Buildings count
+   - Saves to localStorage
+*/
 
-let state = {
-  cash: 0,
-  perTap: 1,
-  upgradeCost: 10,
-  tiles: Array(8).fill(0),
-  lastSeen: Date.now()
-};
+(() => {
+  const SAVE_KEY = "flipcity_save_v1";
 
-const TILE_DATA = [
-  { name: "Empty Lot", cost: 25, income: 0 },
-  { name: "🏠 House", cost: 60, income: 1 },
-  { name: "🏪 Store", cost: 160, income: 3 },
-  { name: "🏢 Tower", cost: 0, income: 7 }
-];
+  // --- Tunables (Step 1 only) ---
+  const TILE_COUNT = 8;            // matches your 2-row layout in the screenshot
+  const EMPTY_TILE_COST = 25;
+  const HOUSE_NAME = "House";
 
-const cashEl = document.getElementById("cash");
-const perTapEl = document.getElementById("perTap");
-const upgradeCostEl = document.getElementById("upgradeCost");
-const passiveEl = document.getElementById("passive");
-const tileGrid = document.getElementById("tileGrid");
-const upgradeBtn = document.getElementById("upgradeBtn");
+  // --- DOM ---
+  const $cash = document.getElementById("cash");
+  const $perTap = document.getElementById("perTap");
+  const $upgradeCost = document.getElementById("upgradeCost");
+  const $tapBtn = document.getElementById("tapBtn");
+  const $upgradeBtn = document.getElementById("upgradeBtn");
+  const $passiveRate = document.getElementById("passiveRate");
+  const $offlineEarned = document.getElementById("offlineEarned");
+  const $buildingsCount = document.getElementById("buildingsCount");
+  const $tiles = document.getElementById("tiles");
+  const $status = document.getElementById("status");
+  const $resetBtn = document.getElementById("resetBtn");
 
-function save() {
-  state.lastSeen = Date.now();
-  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-}
-
-function load() {
-  const data = localStorage.getItem(SAVE_KEY);
-  if (data) state = JSON.parse(data);
-}
-
-function passiveIncome() {
-  return state.tiles.reduce((sum, t) => sum + TILE_DATA[t].income, 0);
-}
-
-function updateUI() {
-  cashEl.textContent = state.cash;
-  perTapEl.textContent = state.perTap;
-  upgradeCostEl.textContent = state.upgradeCost;
-  passiveEl.textContent = `Passive: ${passiveIncome()}/sec`;
-  upgradeBtn.disabled = state.cash < state.upgradeCost;
-}
-
-function renderTiles() {
-  tileGrid.innerHTML = "";
-  state.tiles.forEach((t, i) => {
-    const d = document.createElement("div");
-    d.className = "tile";
-
-    if (t === 0) {
-      d.innerHTML = "Empty Lot<br>(25)";
-    } else {
-      d.innerHTML = `${TILE_DATA[t].name}<br>+${TILE_DATA[t].income}/sec`;
-    }
-
-    d.onclick = () => handleTile(i);
-    tileGrid.appendChild(d);
+  // --- State ---
+  const defaultState = () => ({
+    cash: 0,
+    perTap: 1,
+    upgradeCost: 10,
+    offlineEarned: 0,
+    buildings: 0,
+    // tiles: each is { type: "empty" | "house" }
+    tiles: Array.from({ length: TILE_COUNT }, () => ({ type: "empty" })),
+    // for future offline calc
+    lastSeen: Date.now()
   });
-}
 
-function handleTile(i) {
-  const t = state.tiles[i];
-  const cost = TILE_DATA[t].cost;
+  let state = load() || defaultState();
 
-  if (state.cash < cost) return;
+  // --- Save / Load ---
+  function save() {
+    state.lastSeen = Date.now();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  }
 
-  state.cash -= cost;
-  if (t < 3) state.tiles[i]++;
-  renderTiles();
-  updateUI();
+  function load() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+
+      // minimal validation / upgrade safety
+      if (!parsed || typeof parsed !== "object") return null;
+      if (!Array.isArray(parsed.tiles)) return null;
+
+      // if tile count changed, normalize
+      if (parsed.tiles.length !== TILE_COUNT) {
+        const tiles = Array.from({ length: TILE_COUNT }, (_, i) => parsed.tiles[i] || { type: "empty" });
+        parsed.tiles = tiles;
+      }
+
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+
+  // --- Helpers ---
+  function fmt(n) {
+    // keep it simple for now
+    return Math.floor(n).toString();
+  }
+
+  function canAfford(cost) {
+    return state.cash >= cost;
+  }
+
+  // --- Game actions ---
+  function tapToEarn() {
+    state.cash += state.perTap;
+    save();
+    render();
+  }
+
+  function buyUpgrade() {
+    if (!canAfford(state.upgradeCost)) return;
+    state.cash -= state.upgradeCost;
+    state.perTap += 1;
+    // simple scaling
+    state.upgradeCost = Math.floor(state.upgradeCost * 1.6 + 5);
+    save();
+    render();
+  }
+
+  function buyTile(index) {
+    const tile = state.tiles[index];
+    if (!tile || tile.type !== "empty") return;
+
+    if (!canAfford(EMPTY_TILE_COST)) return;
+
+    state.cash -= EMPTY_TILE_COST;
+    tile.type = "house";
+    state.buildings += 1;
+
+    save();
+    render();
+  }
+
+  function resetSave() {
+    localStorage.removeItem(SAVE_KEY);
+    state = defaultState();
+    save();
+    render();
+  }
+
+  // --- Render ---
+  function renderHeader() {
+    $cash.textContent = fmt(state.cash);
+    $perTap.textContent = fmt(state.perTap);
+    $upgradeCost.textContent = fmt(state.upgradeCost);
+
+    // Step 1: passive/offline not implemented yet, keep display stable
+    $passiveRate.textContent = "0";
+    $offlineEarned.textContent = fmt(state.offlineEarned || 0);
+    $buildingsCount.textContent = fmt(state.buildings || 0);
+
+    $upgradeBtn.disabled = !canAfford(state.upgradeCost);
+  }
+
+  function renderTiles() {
+    $tiles.innerHTML = "";
+
+    state.tiles.forEach((t, i) => {
+      const btn = document.createElement("div");
+      btn.className = "tile";
+
+      if (t.type === "empty") {
+        btn.classList.add("empty");
+
+        // lock style if not enough cash
+        if (!canAfford(EMPTY_TILE_COST)) btn.classList.add("locked");
+
+        btn.innerHTML = `Empty<br>Lot<br><small>(${EMPTY_TILE_COST})</small>`;
+        btn.addEventListener("click", () => buyTile(i));
+      } else if (t.type === "house") {
+        btn.classList.add("house");
+        btn.innerHTML = `${HOUSE_NAME}<br><small>Owned</small>`;
+        // later you can add upgrade/sell/merge actions here
+      } else {
+        // unknown type fallback
+        btn.innerHTML = `Unknown`;
+      }
+
+      $tiles.appendChild(btn);
+    });
+  }
+
+  function render() {
+    renderHeader();
+    renderTiles();
+    $status.textContent = "Game loaded ✅";
+  }
+
+  // --- Wire up ---
+  $tapBtn.addEventListener("click", tapToEarn);
+  $upgradeBtn.addEventListener("click", buyUpgrade);
+  $resetBtn.addEventListener("click", resetSave);
+
+  // Save on page hide (mobile-friendly)
+  window.addEventListener("pagehide", save);
+  window.addEventListener("beforeunload", save);
+
+  // Initial render
   save();
-}
-
-document.getElementById("tapBtn").onclick = () => {
-  state.cash += state.perTap;
-  updateUI();
-  save();
-};
-
-upgradeBtn.onclick = () => {
-  if (state.cash < state.upgradeCost) return;
-  state.cash -= state.upgradeCost;
-  state.perTap++;
-  state.upgradeCost = Math.floor(state.upgradeCost * 1.4);
-  updateUI();
-  save();
-};
-
-document.getElementById("resetBtn").onclick = () => {
-  localStorage.removeItem(SAVE_KEY);
-  location.reload();
-};
-
-setInterval(() => {
-  state.cash += passiveIncome();
-  updateUI();
-  save();
-}, 1000);
-
-load();
-renderTiles();
-updateUI();
+  render();
+})();
