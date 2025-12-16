@@ -150,10 +150,12 @@
   }, 500);
 
 
-    // Register SW (safe)
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
-    }
-  </script>
+<script>
+  // Register SW (DISABLED while debugging)
+  // if ("serviceWorker" in navigator) {
+  //   navigator.serviceWorker.register("./sw.js").catch(() => {});
+  // }
+</script>
+   
 </body>
 </html>
