@@ -14,10 +14,9 @@
   <style>
     * { box-sizing: border-box; }
 
-    /* ---------- THEMES (CSS variables) ---------- */
     :root{
-      --bg1:#1a2a44;
-      --bg2:#0b1220;
+      --bg1:#22124a;
+      --bg2:#050617;
       --card: rgba(255,255,255,.06);
       --cardBorder: rgba(255,255,255,.10);
       --panel: rgba(0,0,0,.18);
@@ -28,32 +27,11 @@
       --btn: #ffffff;
       --btnText:#0b1220;
 
-      --tileA1: rgba(30,144,255,.95);
-      --tileA2: rgba(30,144,255,.35);
-
-      --glow: rgba(0,255,255,.18);
-    }
-    body[data-theme="neon"]{
-      --bg1:#22124a; --bg2:#050617;
       --glow: rgba(0,255,255,.22);
     }
-    body[data-theme="sunset"]{
-      --bg1:#3a1035; --bg2:#120612;
-      --tileA1: rgba(255,128,0,.95);
-      --tileA2: rgba(255,0,128,.30);
-      --glow: rgba(255,128,0,.18);
-    }
-    body[data-theme="emerald"]{
-      --bg1:#08362a; --bg2:#041411;
-      --tileA1: rgba(0,220,140,.92);
-      --tileA2: rgba(0,120,255,.25);
-      --glow: rgba(0,220,140,.18);
-    }
-    body[data-theme="midnight"]{
-      --bg1:#0f1b2a; --bg2:#060a12;
-      --card: rgba(255,255,255,.05);
-      --glow: rgba(120,160,255,.16);
-    }
+    body[data-theme="sunset"]{ --bg1:#3a1035; --bg2:#120612; --glow: rgba(255,128,0,.18); }
+    body[data-theme="emerald"]{ --bg1:#08362a; --bg2:#041411; --glow: rgba(0,220,140,.18); }
+    body[data-theme="midnight"]{ --bg1:#0f1b2a; --bg2:#060a12; --card: rgba(255,255,255,.05); --glow: rgba(120,160,255,.16); }
 
     body {
       margin: 0;
@@ -89,6 +67,22 @@
       box-shadow: 0 0 0 1px rgba(255,255,255,.02), 0 18px 60px var(--glow);
     }
 
+    /* --- Banner Ad Slot --- */
+    .adSlot {
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,.28);
+      background: rgba(0,0,0,.18);
+      padding: 12px;
+      min-height: 76px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .adSlot small { display:block; opacity:.8; font-weight:700; margin-top:4px; }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -103,7 +97,28 @@
       border: 1px solid var(--panelBorder);
     }
     .stat .label { opacity: .8; font-size: 12px; }
-    .stat .value { font-size: 20px; margin-top: 6px; font-weight: 800; }
+    .stat .value { font-size: 20px; margin-top: 6px; font-weight: 900; }
+
+    .boostBar {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+    }
+    .boostBar .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.14);
+      font-size: 12px;
+      opacity: .95;
+    }
 
     .tiles {
       margin-top: 12px;
@@ -126,7 +141,7 @@
       gap: 8px;
       position: relative;
       overflow: hidden;
-      background: linear-gradient(180deg, var(--tileA1), var(--tileA2));
+      background: linear-gradient(180deg, rgba(0,255,255,.95), rgba(120,0,255,.22));
     }
     .tile::after{
       content:"";
@@ -204,16 +219,6 @@
       cursor: pointer; color: var(--btnText); background: var(--btn);
     }
 
-    .toggles { margin-top: 12px; display: grid; gap: 10px; }
-    .toggleRow {
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 10px 12px; border-radius: 12px;
-      background: var(--panel); border: 1px solid var(--panelBorder);
-      font-size: 14px; font-weight: 900;
-    }
-    .toggleRow small { opacity: .85; font-weight: 800; color: var(--muted); }
-    .toggleRow input { transform: scale(1.2); }
-
     .selectRow {
       display:flex; align-items:center; justify-content:space-between; gap:12px;
       padding: 10px 12px; border-radius: 12px;
@@ -232,6 +237,16 @@
       outline: none;
     }
     option { color: #000; }
+
+    .toggles { margin-top: 12px; display: grid; gap: 10px; }
+    .toggleRow {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 12px; border-radius: 12px;
+      background: var(--panel); border: 1px solid var(--panelBorder);
+      font-size: 14px; font-weight: 900;
+    }
+    .toggleRow small { opacity: .85; font-weight: 800; color: var(--muted); }
+    .toggleRow input { transform: scale(1.2); }
 
     .log {
       margin-top: 10px;
@@ -311,6 +326,18 @@
           </div>
         </div>
 
+        <!-- Boost status -->
+        <div class="boostBar" id="boostBar" style="display:none;">
+          <div>Boost Active</div>
+          <div class="pill" id="boostPill">2x • 00:00</div>
+        </div>
+
+        <!-- Banner Ad Slot -->
+        <div class="adSlot" id="bannerSlot">
+          Banner Ad Slot
+          <small>(Drop your AdSense unit here later)</small>
+        </div>
+
         <h2 style="margin:16px 0 10px;">City Tiles</h2>
         <div id="tiles" class="tiles"></div>
 
@@ -339,6 +366,14 @@
           <p>Boosts ALL tile tap bonuses.</p>
           <div class="price" id="tileUpPrice">$75</div>
           <button class="shopBtn" id="buyTileUp">Buy</button>
+        </div>
+
+        <h2 style="margin:16px 0 10px;">Reward</h2>
+        <div class="shopItem">
+          <h3>Watch Ad → 2x Boost</h3>
+          <p>Get 2x earnings for 60 seconds.</p>
+          <div class="price" id="rewardStatus">Ready</div>
+          <button class="shopBtn" id="rewardBtn">Get Boost</button>
         </div>
 
         <h2 style="margin:16px 0 10px;">Skins</h2>
