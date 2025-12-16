@@ -130,7 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
       
-<script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").then((reg) => {
       reg.addEventListener("updatefound", () => {
