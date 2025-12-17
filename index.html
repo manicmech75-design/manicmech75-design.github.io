@@ -4,16 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- iOS PWA support -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="City Flip">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <!-- iOS PWA support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="City Flip">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
 
   <!-- PWA -->
-  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#0b1220">
-  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="icon" href="./icons/icon-192.png">
 
   <title>City Flip</title>
 
@@ -49,7 +49,6 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: radial-gradient(circle at top, var(--bg1), var(--bg2));
       color: var(--text);
-      <div id="game">
     }
 
     header {
@@ -143,6 +142,20 @@
       gap: 10px;
     }
 
+    /* makes tiles visible + tappable */
+    .tileBtn {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 12px;
+      font-weight: 950;
+      cursor: pointer;
+      color: var(--btnText);
+      background: var(--btn);
+      font-size: 16px;
+      min-height: 70px;
+    }
+
     .log {
       margin-top: 10px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -167,7 +180,7 @@
     .shopItem p { margin: 0; opacity: .9; font-size: 13px; color: var(--muted); }
     .shopItem .price { margin-top: 8px; font-weight: 950; }
 
-    .tileBtn, .shopBtn {
+    .shopBtn {
       width: 100%;
       border: 0;
       border-radius: 12px;
@@ -176,54 +189,6 @@
       cursor: pointer;
       color: var(--btnText);
       background: var(--btn);
-    }
-
-    .selectRow {
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      padding: 10px 12px; border-radius: 12px;
-      background: var(--panel); border: 1px solid var(--panelBorder);
-      margin-top: 10px;
-      font-weight: 900;
-    }
-    select {
-      width: 160px;
-      border-radius: 12px;
-      padding: 10px 12px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.10);
-      color: #fff;
-      font-weight: 900;
-      outline: none;
-    }
-    option { color: #000; }
-
-    .toggles { margin-top: 12px; display: grid; gap: 10px; }
-    .toggleRow {
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 10px 12px; border-radius: 12px;
-      background: var(--panel); border: 1px solid var(--panelBorder);
-      font-size: 14px; font-weight: 900;
-    }
-    .toggleRow small { opacity: .85; font-weight: 800; color: var(--muted); }
-    .toggleRow input { transform: scale(1.2); }
-
-    .modalBackdrop {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.55);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      z-index: 30;
-    }
-    .modal {
-      width: 100%;
-      max-width: 440px;
-      background: rgba(11,18,32,.96);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 16px;
-      padding: 14px;
-      box-shadow: 0 24px 80px rgba(0,0,0,.55);
     }
 
     .toast {
@@ -275,11 +240,6 @@
           </div>
         </div>
 
-        <div class="boostBar" id="boostBar">
-          <div>Boost Active</div>
-          <div class="pill" id="boostPill">2x • 00:00</div>
-        </div>
-
         <h2 style="margin:16px 0 10px;">City Tiles</h2>
         <div id="tiles" class="tiles"></div>
 
@@ -309,29 +269,6 @@
           <div class="price" id="tileUpPrice">$75</div>
           <button class="shopBtn" id="buyTileUp">Buy</button>
         </div>
-
-        <p style="margin-top:12px;opacity:.85;font-size:13px;">
-          Autosaves every few seconds + on background/close.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <div class="modalBackdrop" id="offlineModal">
-    <div class="modal">
-      <h3>Welcome back!</h3>
-      <p id="offlineText">You earned $0 while away.</p>
-      <button class="modalBtn" id="offlineOk">Collect</button>
-    </div>
-  </div>
-
-  <div class="modalBackdrop" id="prestigeModal">
-    <div class="modal">
-      <h3>Prestige?</h3>
-      <p id="prestigeModalText">This will reset your upgrades and tile levels for a permanent multiplier.</p>
-      <div class="row">
-        <button class="modalBtn secondary" id="prestigeCancel">Cancel</button>
-        <button class="modalBtn" id="prestigeConfirm">Prestige</button>
       </div>
     </div>
   </div>
@@ -341,11 +278,11 @@
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").catch(()=>{});
+        navigator.serviceWorker.register("./sw.js").catch(()=>{});
       });
     }
   </script>
 
-  <script src="/game.js"></script>
+  <script src="./game.js"></script>
 </body>
 </html>
