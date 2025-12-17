@@ -18,8 +18,37 @@
     crossorigin="anonymous"></script>
 
   <style>
-    /* your CSS stays here */
-  </style>
+  * { box-sizing: border-box; }
+
+  :root{
+    --bg1:#22124a;
+    --bg2:#050617;
+    --card: rgba(255,255,255,.06);
+    --cardBorder: rgba(255,255,255,.10);
+    --panel: rgba(0,0,0,.18);
+    --panelBorder: rgba(255,255,255,.08);
+    --text: #ffffff;
+    --muted: rgba(255,255,255,.85);
+    --btn: #ffffff;
+    --btnText:#0b1220;
+    --glow: rgba(0,255,255,.22);
+  }
+
+  body[data-theme="sunset"]{ --bg1:#3a1035; --bg2:#120612; --glow: rgba(255,128,0,.18); }
+  body[data-theme="emerald"]{ --bg1:#08362a; --bg2:#041411; --glow: rgba(0,220,140,.18); }
+  body[data-theme="midnight"]{ --bg1:#0f1b2a; --bg2:#060a12; --card: rgba(255,255,255,.05); --glow: rgba(120,160,255,.16); }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: radial-gradient(circle at top, var(--bg1), var(--bg2));
+    color: var(--text);
+  }
+
+  /* keep ALL remaining CSS here */
+</style>
+  
 </head>
 
     * { box-sizing: border-box; }
