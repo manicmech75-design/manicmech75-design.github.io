@@ -1,5 +1,6 @@
-// Flip City — Builder Edition v5
-// Adds: building levels, power/water utilities, missions (play flow), disasters/events, undo, placement preview, repair tool.
+// Flip City — Builder Edition v6
+// Full build: grid builder + placement preview (hover only) + utilities + missions + events/disasters + upgrades + undo
+// PLUS: skyline that clearly changes + strong "What to do next" guidance when players get lost.
 // No external assets. GitHub Pages safe.
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -45,8 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
       border:1px solid rgba(255,255,255,.16);
       border-radius: 14px;
       padding: 10px 12px;
-      font-weight: 900;
-      transition: transform .06s ease, background .15s ease, opacity .15s ease;
+      font-weight: 950;
+      transition: transform .06s ease, background .15s ease, opacity .15s ease, box-shadow .15s ease;
       user-select:none;
       white-space: nowrap;
     }
@@ -54,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .btn:active{ transform: translateY(1px) scale(.99); }
     .btn.primary{ background: rgba(94,203,255,.18); border-color: rgba(94,203,255,.35); }
     .btn.danger{ background: rgba(255,94,94,.14); border-color: rgba(255,94,94,.35); }
-    .btn.small{ padding: 8px 10px; border-radius: 12px; font-weight: 900; }
+    .btn.small{ padding: 8px 10px; border-radius: 12px; font-weight: 950; }
     .btn.ghost{ background: rgba(255,255,255,.06); }
     .btn[disabled]{ opacity:.55; cursor:not-allowed; }
 
@@ -71,13 +72,13 @@ document.addEventListener("DOMContentLoaded", () => {
     .statsGrid{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
     .stat{ background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); border-radius: 14px; padding: 10px; }
     .k{ font-size: 12px; opacity:.78; }
-    .v{ margin-top: 4px; font-size: 16px; font-weight: 950; }
+    .v{ margin-top: 4px; font-size: 16px; font-weight: 1000; }
     .mono{ font-variant-numeric: tabular-nums; }
 
     .shop{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
     @media (max-width: 560px){ .shop{ grid-template-columns: 1fr; } }
     .shopItem{ background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 12px; display:flex; flex-direction:column; gap: 8px; }
-    .shopItem .t{ font-weight: 950; }
+    .shopItem .t{ font-weight: 1000; }
     .shopItem .d{ font-size: 12px; opacity:.82; }
     .shopItem .b{ display:flex; justify-content:space-between; align-items:center; gap: 10px; }
     .shopItem .meta{ font-size: 12px; opacity:.86; }
@@ -96,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.06);
       cursor:pointer; user-select:none;
-      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
       min-width: 190px;
     }
     .tool:hover{ background: rgba(255,255,255,.09); }
@@ -106,8 +107,12 @@ document.addEventListener("DOMContentLoaded", () => {
       border-color: rgba(94,203,255,.35);
       box-shadow: 0 0 0 3px rgba(94,203,255,.10);
     }
+    .tool.suggest{
+      border-color: rgba(255,206,94,.40);
+      box-shadow: 0 0 0 3px rgba(255,206,94,.10);
+    }
     .tool .icon{ font-size: 18px; }
-    .tool .name{ font-weight: 950; }
+    .tool .name{ font-weight: 1000; }
     .tool .info{ font-size: 12px; opacity: .82; }
 
     .sky{
@@ -118,7 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
       overflow:hidden;
     }
     .skyline{ font-size: 30px; line-height: 1.1; letter-spacing: 2px; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
-    .hint{ font-size: 12px; opacity:.78; margin-top: 6px; }
+    .hint{ font-size: 12px; opacity:.82; margin-top: 6px; }
+    .hint b{ opacity: 1; }
 
     .board{
       border-radius: 18px;
@@ -164,8 +170,8 @@ document.addEventListener("DOMContentLoaded", () => {
     .tile.preview::after{
       content:"";
       position:absolute; inset:-2px;
-      background: radial-gradient(250px 140px at 50% 50%, rgba(94,203,255,.24), transparent 60%);
-      opacity:.9;
+      background: radial-gradient(250px 140px at 50% 50%, rgba(94,203,255,.20), transparent 60%);
+      opacity:.95;
       pointer-events:none;
     }
 
@@ -196,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     @keyframes flash { 0%{opacity:0} 25%{opacity:1} 100%{opacity:0} }
 
-    .panelSmall{ font-size: 12px; opacity:.85; line-height: 1.35; }
+    .panelSmall{ font-size: 12px; opacity:.86; line-height: 1.35; }
 
     .toast{
       position: fixed;
@@ -256,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
       border-radius: 16px;
       padding: 12px;
     }
-    .step .title{ font-weight: 950; margin-bottom: 6px; }
+    .step .title{ font-weight: 1000; margin-bottom: 6px; }
     .step .text{ font-size: 12px; opacity:.88; line-height: 1.42; }
     .modalFooter{
       padding: 16px;
@@ -269,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // -------------------- Helpers --------------------
   const now = () => Date.now();
-  const SAVE_KEY = "flipcity_builder_v5";
+  const SAVE_KEY = "flipcity_builder_v6";
 
   const fmt = (n) => {
     if (!Number.isFinite(n)) return "∞";
@@ -303,31 +309,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const TYPES = {
     empty: { key:"empty", name:"Empty", icon:"⬜", cost:0, baseP:0, baseT:0, info:"Open land." },
 
-    // Infrastructure
-    road:  { key:"road",  name:"Road",  icon:"🛣️", cost:10, baseP:0, baseT:0, info:"Boosts Shops & Factories nearby." },
-    power: { key:"power", name:"Power Plant", icon:"⚡", cost:120, baseP:0.4, baseT:0, info:"Provides POWER coverage." },
-    water: { key:"water", name:"Water Tower", icon:"💧", cost:95, baseP:0.25, baseT:0, info:"Provides WATER coverage." },
+    road:  { key:"road",  name:"Road",  icon:"🛣️", cost:10,  baseP:0,    baseT:0,    info:"Boosts Shops & Factories nearby." },
+    power: { key:"power", name:"Power Plant", icon:"⚡", cost:120, baseP:0.4,  baseT:0,    info:"Provides POWER coverage." },
+    water: { key:"water", name:"Water Tower", icon:"💧", cost:95,  baseP:0.25, baseT:0,    info:"Provides WATER coverage." },
 
-    // Economy
-    house: { key:"house", name:"House", icon:"🏠", cost:18, baseP:0.55, baseT:0, info:"Passive income. Likes Parks & Utilities." },
-    shop:  { key:"shop",  name:"Shop",  icon:"🏪", cost:40, baseP:0.10, baseT:0.55, info:"Tap income. Likes Roads & Houses." },
+    house: { key:"house", name:"House", icon:"🏠", cost:18,  baseP:0.55, baseT:0,    info:"Passive income. Likes Parks & Utilities." },
+    shop:  { key:"shop",  name:"Shop",  icon:"🏪", cost:40,  baseP:0.10, baseT:0.55, info:"Tap income. Likes Roads & Houses." },
     fact:  { key:"fact",  name:"Factory", icon:"🏭", cost:95, baseP:2.10, baseT:0.10, info:"Big passive. Likes Roads & Utilities; hates Parks." },
 
-    // Green
-    park:  { key:"park",  name:"Park",  icon:"🌳", cost:22, baseP:0, baseT:0, info:"Boosts nearby Houses & Shops." },
+    park:  { key:"park",  name:"Park",  icon:"🌳", cost:22,  baseP:0,    baseT:0,    info:"Boosts nearby Houses & Shops." },
   };
 
   // Tools
-  const BUILD_MENU = [
-    "house","shop","fact","park","road","power","water",
-    "upgrade","repair","bulldoze"
-  ];
+  const BUILD_MENU = ["house","shop","fact","park","road","power","water","upgrade","repair","bulldoze"];
 
-  // Events
+  // Events (buffs + fire)
   const EVENTS = [
     { id:"festival", name:"City Festival 🎉", desc:"+50% Tap for 40s", dur:40_000, tapMult:1.5, passMult:1.0 },
-    { id:"boom", name:"Construction Boom 🏗️", desc:"+50% Passive for 40s", dur:40_000, tapMult:1.0, passMult:1.5 },
-    { id:"fire", name:"Fire 🔥", desc:"A random building catches fire (repair it)", dur:0, fire:true }
+    { id:"boom",     name:"Construction Boom 🏗️", desc:"+50% Passive for 40s", dur:40_000, tapMult:1.0, passMult:1.5 },
+    { id:"fire",     name:"Fire 🔥", desc:"A random building catches fire (repair it)", dur:0, fire:true }
   ];
 
   // -------------------- State --------------------
@@ -339,39 +339,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     board: Array.from({ length: W*H }, () => ({ type: EMPTY, lvl: 0, fire: false })),
 
-    tool: "house",
+    tool: "house",          // IMPORTANT: start on House so new players aren’t confused
     hoverIndex: null,
 
-    // 5 economy upgrades (global)
+    // 5 upgrades
     up: {
-      zoning: 0,      // all outputs +8%/lvl
-      efficiency: 0,  // build/upgrade costs -5%/lvl (cap -45%)
-      commerce: 0,    // shop tap scaling +12%/lvl
-      logistics: 0,   // road adjacency +10%/lvl
-      parks: 0,       // park adjacency +12%/lvl AND reduces factory-park penalty
+      zoning: 0,
+      efficiency: 0,
+      commerce: 0,
+      logistics: 0,
+      parks: 0,
     },
 
-    // utilities range upgrades come from zoning/logistics/parks
-    // (kept simple)
-
-    // undo stack
-    undo: [], // list of snapshots (small), capped
-
-    // missions
+    undo: [],               // snapshots
     missionIndex: 0,
 
-    // events
     event: {
-      active: null,   // { name, endsAt, tapMult, passMult }
+      active: null,
       nextAt: now() + 35_000
     },
 
-    // intro
     seenIntro: false
   };
 
-  // -------------------- Missions --------------------
-  // Missions are intentionally very “flow”-based.
+  // -------------------- Missions (play flow) --------------------
   const MISSIONS = [
     { id:"m1", title:"Lay foundations", desc:"Build 4 Houses.", check: s => countType("house") >= 4 },
     { id:"m2", title:"Green spaces", desc:"Build 2 Parks near Houses.", check: s => parksNearHouses() >= 2 },
@@ -389,8 +380,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const parkPower = () => 1 + state.up.parks * 0.12;
   const shopMult = () => 1 + state.up.commerce * 0.12;
 
-  // Utilities coverage radius (simple but feels like a system)
-  const powerRadius = () => 3 + Math.floor(state.up.logistics / 4); // grows slowly
+  // Utilities coverage radius (simple but gamey)
+  const powerRadius = () => 3 + Math.floor(state.up.logistics / 4);
   const waterRadius = () => 3 + Math.floor(state.up.parks / 4);
 
   // -------------------- Geometry --------------------
@@ -416,13 +407,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return out;
   }
-
   function manhattan(a,b){
     const [ax,ay]=a, [bx,by]=b;
     return Math.abs(ax-bx)+Math.abs(ay-by);
   }
 
-  // -------------------- Counting helpers (missions/guidance) --------------------
+  // -------------------- Counters (missions/guidance) --------------------
   function countType(type){
     let c=0;
     for (const t of state.board) if (t.type===type) c++;
@@ -434,7 +424,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return m;
   }
   function parksNearHouses(){
-    // count parks that have at least one adjacent house (8-neighborhood)
     let c=0;
     for (let i=0;i<state.board.length;i++){
       if (state.board[i].type!=="park") continue;
@@ -445,7 +434,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return c;
   }
   function factoryParkConflicts(){
-    // number of factories with any park in 8-neighborhood
     let c=0;
     for (let i=0;i<state.board.length;i++){
       if (state.board[i].type!=="fact") continue;
@@ -462,38 +450,28 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!t) return 0;
     return Math.ceil(t.cost * costMult());
   }
-
   function upgradeCost(tile){
     if (!tile || tile.type===EMPTY) return 0;
-    // base cost depends on building type and current level
     const base = Math.max(10, buildingCost(tile.type));
-    return Math.ceil((base * 0.55) * Math.pow(1.55, tile.lvl)); // lvl0->1 cheap, later grows
+    return Math.ceil((base * 0.55) * Math.pow(1.55, tile.lvl));
   }
-
   function repairCost(tile){
     if (!tile.fire) return 0;
     const base = Math.max(8, buildingCost(tile.type));
     return Math.ceil(base * 0.25 + tile.lvl * 6);
   }
-
   function bulldozeRefund(tile){
     if (!tile || tile.type===EMPTY) return 0;
-    // refund depends on current level
     const base = buildingCost(tile.type);
     return Math.floor(base * (0.30 + tile.lvl * 0.04));
   }
 
-  // Upgrade shop costs (5 upgrades)
-  function costUpgrade(key){
-    const lvl = state.up[key];
-    const base = { zoning: 140, efficiency: 160, commerce: 150, logistics: 170, parks: 145 }[key] || 150;
-    const growth = { zoning: 1.22, efficiency: 1.24, commerce: 1.23, logistics: 1.25, parks: 1.23 }[key] || 1.23;
-    return Math.ceil(base * Math.pow(growth, lvl) * (1 + lvl * 0.02));
+  function cheapestBuildCost(){
+    return Math.min(buildingCost("house"), buildingCost("park"), buildingCost("road"));
   }
 
   // -------------------- Utilities coverage --------------------
   function hasUtilityAt(x,y, utilType){
-    // utilType: "power" or "water"
     const r = utilType==="power" ? powerRadius() : waterRadius();
     const here = [x,y];
     for (let i=0;i<state.board.length;i++){
@@ -510,71 +488,59 @@ document.addEventListener("DOMContentLoaded", () => {
     const tile = state.board[idx(x,y)];
     if (!tile || tile.type===EMPTY) return { passive:0, tap:0, mood:"", needs:"" };
 
-    // roads/parks/utilities themselves don't produce meaningful income (except small passive for utilities)
     const meta = TYPES[tile.type];
     let passive = meta.baseP || 0;
     let tap = meta.baseT || 0;
 
-    // fire disables output until repaired
     if (tile.fire){
       return { passive:0, tap:0, mood:"🔥 On fire", needs:"Repair" };
     }
 
-    // level scaling: each level increases output
-    // lvl 0..5 => multiplier 1.0.. (feel good)
+    // level scaling
     const lvlMult = 1 + tile.lvl * 0.35;
 
-    // adjacency counts
-    let parks=0, roads4=0, houses8=0, shops8=0;
+    // adjacency
+    let parks=0, roads4=0, houses8=0;
     for (const [nx,ny] of neighbors8(x,y)){
       const nt = state.board[idx(nx,ny)].type;
       if (nt==="park") parks++;
       if (nt==="house") houses8++;
-      if (nt==="shop") shops8++;
     }
     for (const [nx,ny] of neighbors4(x,y)){
       const nt = state.board[idx(nx,ny)].type;
       if (nt==="road") roads4++;
     }
 
-    // utilities requirements for real builder feel
+    // utilities requirements
     const needsPower = (tile.type==="house" || tile.type==="shop" || tile.type==="fact");
-    const needsWater = (tile.type==="house" || tile.type==="fact"); // shops don't require water
+    const needsWater = (tile.type==="house" || tile.type==="fact");
     const hasPower = !needsPower || hasUtilityAt(x,y,"power");
     const hasWater = !needsWater || hasUtilityAt(x,y,"water");
 
-    // if missing utilities, output reduced (not zero, but noticeable)
     let utilityMult = 1;
     let needs = [];
     if (!hasPower){ utilityMult *= 0.55; needs.push("⚡"); }
     if (!hasWater){ utilityMult *= 0.65; needs.push("💧"); }
 
     const mood = [];
-    // parks boost houses/shops
     if (tile.type==="house" || tile.type==="shop"){
       const pBonus = 1 + parks * 0.08 * parkPower();
       passive *= pBonus;
       tap *= pBonus;
       if (parks>0) mood.push("+Parks");
     }
-
-    // roads boost shops/factories
     if (tile.type==="shop" || tile.type==="fact"){
       const rBonus = 1 + roads4 * 0.12 * roadPower();
       passive *= rBonus;
       tap *= rBonus;
       if (roads4>0) mood.push("+Roads");
     }
-
-    // houses increase shop activity (tap)
     if (tile.type==="shop"){
       const hBonus = 1 + houses8 * 0.03;
       tap *= hBonus;
       if (houses8>0) mood.push("+Houses");
       tap *= shopMult();
     }
-
-    // factories hate parks (pollution), reduced by parks upgrade
     if (tile.type==="fact" && parks>0){
       const penaltyPerPark = Math.max(0.015, 0.055 - state.up.parks * 0.007);
       const pen = 1 - parks * penaltyPerPark;
@@ -582,16 +548,15 @@ document.addEventListener("DOMContentLoaded", () => {
       mood.push("-Parks");
     }
 
-    // apply multipliers
     passive *= lvlMult * utilityMult * zoningMult();
     tap *= lvlMult * utilityMult * zoningMult();
 
-    return {
-      passive,
-      tap,
-      mood: mood.join(" "),
-      needs: needs.length ? `Needs ${needs.join("")}` : ""
-    };
+    return { passive, tap, mood: mood.join(" "), needs: needs.length ? `Needs ${needs.join("")}` : "" };
+  }
+
+  function currentEventMults(){
+    if (!state.event.active) return { tapMult:1, passMult:1 };
+    return { tapMult: state.event.active.tapMult, passMult: state.event.active.passMult };
   }
 
   function totalYields(){
@@ -601,42 +566,77 @@ document.addEventListener("DOMContentLoaded", () => {
       passive += yld.passive;
       tap += yld.tap;
     }
-    // apply event multipliers
     const ev = currentEventMults();
     passive *= ev.passMult;
     tap *= ev.tapMult;
     return { passive, tap };
   }
 
-  function currentEventMults(){
-    if (!state.event.active) return { tapMult:1, passMult:1 };
-    return { tapMult: state.event.active.tapMult, passMult: state.event.active.passMult };
-  }
-
-  // skyline preview is now “levels”
+  // -------------------- Skyline (big tweak) --------------------
+  // Feels like growth: construction → suburb → town → city → skyline.
   function skylineString(){
-    // pick strongest buildings by level+type weight and show icons repeated
-    const weights = { fact: 3.0, shop: 2.2, house: 1.6, power: 1.2, water: 1.1, park: 0.9, road: 0.4 };
-    const arr = [];
+    const counts = { house:0, shop:0, fact:0, park:0, road:0, power:0, water:0 };
+    let totalBuildings = 0;
+    let levelSum = 0;
+
     for (const t of state.board){
-      if (t.type===EMPTY) continue;
-      const w = (weights[t.type] || 1) + t.lvl * 0.5 + (t.fire ? -2 : 0);
-      arr.push({ icon: TYPES[t.type].icon, w });
+      if (counts[t.type] !== undefined) counts[t.type]++;
+      if (t.type !== EMPTY){
+        // count only "real" buildings for city size (roads/parks included slightly)
+        if (t.type !== "road" && t.type !== "park") totalBuildings++;
+        levelSum += (t.type !== EMPTY ? t.lvl : 0);
+      }
     }
-    arr.sort((a,b)=>b.w-a.w);
-    if (!arr.length) return "⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜";
-    return arr.slice(0, 12).map(o => o.icon).join(" ");
+
+    // nothing built: show construction vibe
+    if (counts.house + counts.shop + counts.fact + counts.power + counts.water === 0) {
+      return "⬜ ⬜ ⬜ 🏗️ ⬜ ⬜ ⬜";
+    }
+
+    // stage by maturity
+    const maturity = totalBuildings + Math.floor(levelSum / 3);
+    const stage =
+      maturity < 5  ? 0 :
+      maturity < 10 ? 1 :
+      maturity < 18 ? 2 :
+      maturity < 28 ? 3 : 4;
+
+    // base skyline pieces
+    let skyline = [];
+    const push = (icon, n) => { for (let i=0;i<n;i++) skyline.push(icon); };
+
+    // build composition (always changes when you place)
+    push("🏠", Math.min(6, counts.house));
+    push("🏪", Math.min(4, counts.shop));
+    push("🏭", Math.min(3, counts.fact));
+    push("⚡", Math.min(2, counts.power));
+    push("💧", Math.min(2, counts.water));
+    push("🌳", Math.min(3, counts.park));
+
+    // upgrade visuals by stage
+    if (stage >= 1) skyline = skyline.map(i => i === "🏠" ? "🏡" : i);
+    if (stage >= 2) skyline = skyline.map(i => i === "🏡" ? "🏢" : i);
+    if (stage >= 3) skyline = skyline.map(i => (i === "🏢" ? "🏙️" : (i === "🏪" ? "🏬" : i)));
+    if (stage >= 4) {
+      skyline = skyline.map(i => (i === "🏙️" ? "🌆" : i));
+      // sprinkle neon vibe
+      skyline.push("✨");
+    }
+
+    // pad/trim
+    while (skyline.length < 12) skyline.push("⬜");
+    return skyline.slice(0, 12).join(" ");
   }
 
   // -------------------- Undo --------------------
   function pushUndo(){
-    // store minimal snapshot (board + cash + totalEarned + missions + tool + event)
     const snap = {
       cash: state.cash,
       totalEarned: state.totalEarned,
       board: state.board.map(t => ({ type:t.type, lvl:t.lvl, fire:!!t.fire })),
       missionIndex: state.missionIndex,
-      event: state.event.active ? { ...state.event.active } : null
+      eventActive: state.event.active ? { ...state.event.active } : null,
+      tool: state.tool
     };
     state.undo.push(snap);
     if (state.undo.length > 30) state.undo.shift();
@@ -649,13 +649,128 @@ document.addEventListener("DOMContentLoaded", () => {
     state.totalEarned = snap.totalEarned;
     state.board = snap.board.map(t => ({ type:t.type, lvl:t.lvl, fire:!!t.fire }));
     state.missionIndex = snap.missionIndex;
-    state.event.active = snap.event;
+    state.event.active = snap.eventActive;
+    state.tool = BUILD_MENU.includes(snap.tool) ? snap.tool : "house";
     toast("↩️ Undid last action");
     render();
     save();
   }
 
-  // -------------------- Placement / actions --------------------
+  // -------------------- Missions --------------------
+  function nextMissionIfComplete(){
+    let progressed = false;
+    while (state.missionIndex < MISSIONS.length && MISSIONS[state.missionIndex].check(state)){
+      state.missionIndex++;
+      progressed = true;
+    }
+    if (progressed) toast("✅ Mission complete!");
+  }
+
+  // -------------------- Events / disasters --------------------
+  function tickEvents(){
+    if (state.event.active && now() >= state.event.active.endsAt){
+      state.event.active = null;
+      toast("⏱️ Event ended");
+    }
+    if (now() < state.event.nextAt) return;
+
+    state.event.nextAt = now() + (35_000 + Math.random() * 40_000);
+
+    const built = state.board.filter(t => t.type !== EMPTY).length;
+    const chance = clamp(0.28 + built * 0.004, 0.28, 0.60);
+    if (Math.random() > chance) return;
+
+    const e = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+
+    if (e.fire){
+      const candidates = [];
+      for (let i=0;i<state.board.length;i++){
+        const t = state.board[i];
+        if (t.type===EMPTY) continue;
+        if (t.type==="road" || t.type==="park" || t.type==="power" || t.type==="water") continue;
+        if (t.fire) continue;
+        candidates.push(i);
+      }
+      if (!candidates.length) return;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      state.board[pick].fire = true;
+      toast("🔥 Fire! Select Repair and click the burning building.");
+      render();
+      return;
+    }
+
+    state.event.active = {
+      id: e.id,
+      name: e.name,
+      desc: e.desc,
+      tapMult: e.tapMult,
+      passMult: e.passMult,
+      endsAt: now() + e.dur
+    };
+    toast(`🎲 Event: ${e.name}`);
+    render();
+  }
+
+  // -------------------- Guidance (big tweak) --------------------
+  // Returns both text + which tool to highlight (optional).
+  function guidance(){
+    const cash = state.cash;
+    const houses = countType("house");
+    const shops = countType("shop");
+    const roads = countType("road");
+    const power = countType("power");
+    const water = countType("water");
+    const factories = countType("fact");
+    const cheapest = cheapestBuildCost();
+
+    // Mission-first
+    if (state.missionIndex < MISSIONS.length){
+      const m = MISSIONS[state.missionIndex];
+      // suggest tools based on mission
+      const suggest =
+        m.id === "m1" ? "house" :
+        m.id === "m2" ? "park" :
+        m.id === "m3" ? (power === 0 ? "power" : "water") :
+        m.id === "m4" ? (roads < 2 ? "road" : "shop") :
+        m.id === "m5" ? "fact" :
+        m.id === "m6" ? "upgrade" : null;
+
+      return { text: `🎯 <b>${m.title}</b> — ${m.desc}`, suggest };
+    }
+
+    // Stuck: can’t afford the cheapest build
+    if (cash < cheapest){
+      return { text: `💡 <b>What to do next:</b> Tap the <b>Tap</b> button to earn cash until you can build again.`, suggest: null };
+    }
+
+    // Early loop
+    if (houses < 4) return { text: `🏠 <b>What to do next:</b> Build Houses first for passive income.`, suggest: "house" };
+    if (countType("park") < 1) return { text: `🌳 <b>What to do next:</b> Place a Park near Houses for bonuses.`, suggest: "park" };
+
+    // Utilities
+    if (power === 0) return { text: `⚡ <b>What to do next:</b> Build a Power Plant so buildings earn closer to full output.`, suggest: "power" };
+    if (water === 0) return { text: `💧 <b>What to do next:</b> Build a Water Tower so Houses/Factories earn closer to full output.`, suggest: "water" };
+
+    // Commerce
+    if (shops < 2) return { text: `🏪 <b>What to do next:</b> Build Shops to boost tap income.`, suggest: "shop" };
+    if (roads < shops) return { text: `🛣️ <b>What to do next:</b> Add Roads next to Shops/Factories for strong adjacency bonuses.`, suggest: "road" };
+
+    // Industry
+    if (factories < 1 && cash >= buildingCost("fact")) {
+      return { text: `🏭 <b>What to do next:</b> Add a Factory away from Parks for big passive income.`, suggest: "fact" };
+    }
+
+    // Upgrades
+    if (maxLevelAny() < 2) return { text: `⬆️ <b>What to do next:</b> Use Upgrade on your best buildings to scale faster.`, suggest: "upgrade" };
+
+    // Fires
+    const anyFire = state.board.some(t => t.fire);
+    if (anyFire) return { text: `🧯 <b>What to do next:</b> A building is on fire — switch to Repair and click it.`, suggest: "repair" };
+
+    return { text: `✅ <b>What to do next:</b> Optimize placement, upgrade key tiles, and keep utilities coverage strong.`, suggest: null };
+  }
+
+  // -------------------- Actions --------------------
   function flashTile(i){
     const el = document.querySelector(`[data-i="${i}"]`);
     if (!el) return;
@@ -664,17 +779,9 @@ document.addEventListener("DOMContentLoaded", () => {
     el.classList.add("flash");
   }
 
-  function nextMissionIfComplete(){
-    while (state.missionIndex < MISSIONS.length && MISSIONS[state.missionIndex].check(state)){
-      state.missionIndex++;
-      if (state.missionIndex <= MISSIONS.length) toast("✅ Mission complete!");
-    }
-  }
-
   function tryActionOn(x,y){
     const i = idx(x,y);
     const tile = state.board[i];
-
     const tool = state.tool;
 
     if (tool === "bulldoze"){
@@ -720,19 +827,17 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // build tools
-    const type = tool;
-    const meta = TYPES[type];
+    // build
+    const meta = TYPES[tool];
     if (!meta) return;
 
     if (tile.type !== EMPTY) return toast("Tile occupied. Use Bulldoze or Upgrade/Repair.");
-
-    const cost = buildingCost(type);
-    if (state.cash < cost) return toast("Not enough cash to build that.");
+    const cost = buildingCost(tool);
+    if (state.cash < cost) return toast(`Not enough cash. Need $${fmt(cost)}.`);
 
     pushUndo();
     state.cash -= cost;
-    state.board[i] = { type, lvl: 0, fire: false };
+    state.board[i] = { type: tool, lvl: 0, fire: false };
     toast(`Built: ${meta.icon} ${meta.name}`);
     flashTile(i);
 
@@ -740,7 +845,7 @@ document.addEventListener("DOMContentLoaded", () => {
     render(); save();
   }
 
-  // -------------------- Tap + Passive tick --------------------
+  // -------------------- Tap + Passive --------------------
   function tapCity(){
     const y = totalYields();
     const gain = (1.0 + y.tap) * (1 + state.up.zoning * 0.02);
@@ -768,62 +873,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (t - state.lastSaveAt > 10_000) save();
   }
 
-  // -------------------- Events / disasters --------------------
-  function tickEvents(){
-    // end active buff event
-    if (state.event.active && now() >= state.event.active.endsAt){
-      state.event.active = null;
-      toast("⏱️ Event ended");
-    }
-
-    // maybe spawn
-    if (now() < state.event.nextAt) return;
-
-    // schedule next attempt
-    state.event.nextAt = now() + (35_000 + Math.random() * 40_000);
-
-    // fire chance scales with # buildings slightly (so it becomes a management thing)
-    const built = state.board.filter(t => t.type !== EMPTY).length;
-    const chance = clamp(0.28 + built * 0.004, 0.28, 0.60); // more city => more events
-
-    if (Math.random() > chance) return;
-
-    const e = EVENTS[Math.floor(Math.random() * EVENTS.length)];
-
-    if (e.fire){
-      // pick a random non-empty non-utility tile that isn't already on fire
-      const candidates = [];
-      for (let i=0;i<state.board.length;i++){
-        const t = state.board[i];
-        if (t.type===EMPTY) continue;
-        if (t.type==="road") continue;
-        if (t.type==="park") continue;
-        if (t.type==="power" || t.type==="water") continue;
-        if (t.fire) continue;
-        candidates.push(i);
-      }
-      if (!candidates.length) return;
-      const pick = candidates[Math.floor(Math.random() * candidates.length)];
-      state.board[pick].fire = true;
-      toast("🔥 Fire! Select Repair and click the burning building.");
-      render();
-      return;
-    }
-
-    // buff event
-    state.event.active = {
-      id: e.id,
-      name: e.name,
-      desc: e.desc,
-      tapMult: e.tapMult,
-      passMult: e.passMult,
-      endsAt: now() + e.dur
-    };
-    toast(`🎲 Event: ${e.name}`);
-    render();
+  // -------------------- Upgrades (5) --------------------
+  function costUpgrade(key){
+    const lvl = state.up[key];
+    const base = { zoning: 140, efficiency: 160, commerce: 150, logistics: 170, parks: 145 }[key] || 150;
+    const growth = { zoning: 1.22, efficiency: 1.24, commerce: 1.23, logistics: 1.25, parks: 1.23 }[key] || 1.23;
+    return Math.ceil(base * Math.pow(growth, lvl) * (1 + lvl * 0.02));
   }
 
-  // -------------------- Upgrades (5) --------------------
   function buyUpgrade(key){
     const c = costUpgrade(key);
     if (state.cash < c) return toast("Not enough cash.");
@@ -836,35 +893,10 @@ document.addEventListener("DOMContentLoaded", () => {
     save();
   }
 
-  // -------------------- Guidance (“what next”) --------------------
-  function guidanceText(){
-    // prioritizes: mission -> missing utilities -> “build loop”
-    if (state.missionIndex < MISSIONS.length){
-      const m = MISSIONS[state.missionIndex];
-      return `Next mission: <b>${m.title}</b> — ${m.desc}`;
-    }
-
-    // post-missions open ended
-    const noPower = countType("power") === 0;
-    const noWater = countType("water") === 0;
-    if (noPower || noWater){
-      return `You’re growing. Add utilities: build a <b>Power Plant ⚡</b> and <b>Water Tower 💧</b> so buildings produce at full strength.`;
-    }
-
-    const shops = countType("shop");
-    const houses = countType("house");
-    const roads = countType("road");
-    if (houses < 8) return `Build more <b>Houses 🏠</b> for stable passive income. Place <b>Parks 🌳</b> near them for bonuses.`;
-    if (shops < 4) return `Add <b>Shops 🏪</b> and connect them to <b>Roads 🛣️</b> for strong tap income.`;
-    if (roads < 6) return `Expand your <b>Road network</b>. Roads amplify Shops/Factories and help your city feel connected.`;
-    if (maxLevelAny() < 3) return `Use the <b>Upgrade</b> tool to raise key buildings to <b>Level 3</b> for big scaling.`;
-    return `You’re in free-build mode: optimize adjacency, upgrade buildings, and keep an eye out for 🔥 fires.`;
-  }
-
   // -------------------- Save / Load --------------------
   function exportSave(){
     const data = {
-      v: 5,
+      v: 6,
       cash: state.cash,
       totalEarned: state.totalEarned,
       board: state.board,
@@ -880,7 +912,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function importSave(code){
     const json = decodeURIComponent(escape(atob(code.trim())));
     const data = safeParse(json, null);
-    if (!data || data.v !== 5) throw new Error("Bad save");
+    if (!data || data.v !== 6) throw new Error("Bad save");
 
     state.cash = Number(data.cash ?? 0) || 0;
     state.totalEarned = Number(data.totalEarned ?? 0) || 0;
@@ -912,6 +944,7 @@ document.addEventListener("DOMContentLoaded", () => {
       : { active: null, nextAt: now()+35_000 };
 
     state.seenIntro = !!data.seenIntro;
+
     state.lastTickAt = now();
   }
 
@@ -926,12 +959,35 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------- UI helpers --------------------
-  function toolCard(key){
+  function toolCard(key, suggestKey){
     const sel = state.tool === key;
+    const suggest = suggestKey === key;
 
+    if (key === "upgrade"){
+      return `
+        <div class="tool ${sel ? "sel" : ""} ${suggest ? "suggest" : ""}" data-tool="upgrade">
+          <div class="icon">⬆️</div>
+          <div>
+            <div class="name">Upgrade</div>
+            <div class="info">Increase a building to Lv ${MAX_LVL}.</div>
+          </div>
+        </div>
+      `;
+    }
+    if (key === "repair"){
+      return `
+        <div class="tool ${sel ? "sel" : ""} ${suggest ? "suggest" : ""}" data-tool="repair">
+          <div class="icon">🧯</div>
+          <div>
+            <div class="name">Repair</div>
+            <div class="info">Fix 🔥 fires so buildings work again.</div>
+          </div>
+        </div>
+      `;
+    }
     if (key === "bulldoze"){
       return `
-        <div class="tool ${sel ? "sel" : ""}" data-tool="bulldoze">
+        <div class="tool ${sel ? "sel" : ""} ${suggest ? "suggest" : ""}" data-tool="bulldoze">
           <div class="icon">🧹</div>
           <div>
             <div class="name">Bulldoze</div>
@@ -941,38 +997,15 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }
 
-    if (key === "upgrade"){
-      return `
-        <div class="tool ${sel ? "sel" : ""}" data-tool="upgrade">
-          <div class="icon">⬆️</div>
-          <div>
-            <div class="name">Upgrade</div>
-            <div class="info">Increase a building to Lv ${MAX_LVL}.</div>
-          </div>
-        </div>
-      `;
-    }
-
-    if (key === "repair"){
-      return `
-        <div class="tool ${sel ? "sel" : ""}" data-tool="repair">
-          <div class="icon">🧯</div>
-          <div>
-            <div class="name">Repair</div>
-            <div class="info">Fix 🔥 fires so buildings work again.</div>
-          </div>
-        </div>
-      `;
-    }
-
     const t = TYPES[key];
     const cost = buildingCost(key);
+    const afford = state.cash >= cost;
     return `
-      <div class="tool ${sel ? "sel" : ""}" data-tool="${key}">
+      <div class="tool ${sel ? "sel" : ""} ${suggest ? "suggest" : ""}" data-tool="${key}">
         <div class="icon">${t.icon}</div>
         <div>
           <div class="name">${t.name} <span class="mono" style="opacity:.75;">$${fmt(cost)}</span></div>
-          <div class="info">${t.info}</div>
+          <div class="info">${t.info}${afford ? "" : " · (Tap for cash)"}</div>
         </div>
       </div>
     `;
@@ -1003,7 +1036,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="modalHeader">
             <div>
               <h3>Welcome to Flip City — Builder Edition</h3>
-              <div class="sub">Place buildings, power them, upgrade them, and follow missions to learn the flow.</div>
+              <div class="sub">Build a city, power it, upgrade it, and follow missions so you never get lost.</div>
             </div>
             <button class="btn small ghost" id="btnCloseIntro">Close</button>
           </div>
@@ -1011,38 +1044,40 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="modalBody">
             <div class="modalGrid">
               <div class="step">
-                <div class="title">The core loop</div>
+                <div class="title">Core loop</div>
                 <div class="text">
-                  1) Build <b>Houses 🏠</b> + <b>Parks 🌳</b> → 2) Add <b>Utilities ⚡💧</b> → 3) Connect <b>Shops 🏪</b> with <b>Roads 🛣️</b><br>
-                  4) Place <b>Factories 🏭</b> away from parks → 5) <b>Upgrade</b> your best tiles.
+                  Build <b>Houses 🏠</b> + <b>Parks 🌳</b> → add <b>Utilities ⚡💧</b> →
+                  connect <b>Shops 🏪</b> with <b>Roads 🛣️</b> →
+                  place <b>Factories 🏭</b> away from parks →
+                  use <b>Upgrade ⬆️</b> to scale.
                 </div>
               </div>
               <div class="step">
-                <div class="title">What to watch</div>
+                <div class="title">Two incomes</div>
                 <div class="text">
-                  Buildings without ⚡ power or 💧 water earn less.<br>
-                  Fires 🔥 shut buildings down until repaired. Use the <b>Repair</b> tool.
+                  <b>Passive/sec</b> comes mostly from Houses + Factories. <b>Tap power</b> comes mostly from Shops.<br>
+                  If you can’t afford something, just <b>Tap</b> for a bit.
                 </div>
               </div>
 
               <div class="step">
-                <div class="title">Tools you now have</div>
+                <div class="title">Don’t get stuck</div>
                 <div class="text">
-                  Build tools + <b>Upgrade</b> (levels) + <b>Repair</b> (fires) + <b>Bulldoze</b> (rebuild).<br>
-                  Use <b>Undo</b> if you misclick.
+                  The top bar shows <b>What to do next</b> at all times, and highlights a recommended tool.
                 </div>
               </div>
               <div class="step">
-                <div class="title">Missions = guidance</div>
+                <div class="title">Disasters/events</div>
                 <div class="text">
-                  Follow missions for a smooth learning curve. After that, it’s pure optimization.
+                  Fires 🔥 shut buildings down until repaired. Use the <b>Repair</b> tool.
+                  Events can boost tap or passive temporarily.
                 </div>
               </div>
             </div>
           </div>
 
           <div class="modalFooter">
-            <span class="sub">Tip: hover tiles to see yields + needs (⚡/💧).</span>
+            <span class="sub">Tip: hover tiles for preview + yields. Only the hovered tile shows a preview.</span>
             <button class="btn primary" id="btnStart">Start Building</button>
           </div>
         </div>
@@ -1056,6 +1091,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const ev = state.event.active
       ? `${state.event.active.name} (ends in ${Math.max(0, Math.ceil((state.event.active.endsAt - now())/1000))}s)`
       : "No active event";
+
+    const g = guidance();
+    const suggestKey = g.suggest;
 
     root.innerHTML = `
       <div class="wrap">
@@ -1077,9 +1115,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="card sky" style="flex:1 1 720px;">
             <h2>Skyline Preview</h2>
             <div class="skyline">${skylineString()}</div>
-            <div class="hint">
-              ${guidanceText()}
-            </div>
+
+            <div class="hint">${g.text}</div>
+
             <div class="row" style="margin-top:10px;">
               <span class="pill">Cash: <b class="mono">$${fmt(state.cash)}</b></span>
               <span class="pill">Passive/sec: <b class="mono">$${fmt(y.passive)}</b></span>
@@ -1104,19 +1142,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <button class="btn primary" id="btnTap">Tap (collect city activity)</button>
             <div class="panelSmall" style="margin-top:10px;">
-              Tap scales with <b>Shops</b>. Passive scales with <b>Houses + Factories</b>.
-              Upgrade key tiles with <b>Upgrade</b>.
+              If you’re broke: Tap until you can afford <b>House</b> / <b>Park</b> / <b>Road</b> (cheapest builds).
             </div>
 
             <div class="hr"></div>
 
             <h2>Build Tools</h2>
             <div class="buildBar">
-              ${BUILD_MENU.map(toolCard).join("")}
+              ${BUILD_MENU.map(k => toolCard(k, suggestKey)).join("")}
             </div>
             <div class="panelSmall" style="margin-top:10px;">
               Selected: <b>${state.tool}</b>
               ${TYPES[state.tool] ? ` · Cost: <b>$${fmt(buildingCost(state.tool))}</b>` : ""}
+              ${state.cash < cheapestBuildCost() ? ` · <b>Tip:</b> Tap for cash.` : ""}
             </div>
 
             <div class="hr"></div>
@@ -1131,7 +1169,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <div class="card">
             <h2>City Grid</h2>
-            <div class="panelSmall">Hover for preview + yields. Click to act. 🔥 buildings need Repair.</div>
+            <div class="panelSmall">Hover to preview (only hovered tile). Click to act. 🔥 buildings need Repair.</div>
             <div class="board">
               <div class="grid" id="grid"></div>
             </div>
@@ -1185,7 +1223,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // Tools
+    // Tool select
     document.querySelectorAll("[data-tool]").forEach(el => {
       el.addEventListener("click", () => {
         state.tool = el.getAttribute("data-tool");
@@ -1232,59 +1270,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Grid render
     const grid = document.getElementById("grid");
+    const tool = state.tool;
+
     for (let i=0;i<state.board.length;i++){
       const t = state.board[i];
       const [x,y] = xy(i);
       const yld = computeTileYield(x,y);
 
-      // preview validity (so it feels like a builder)
       let cls = "tile";
-      let sub = "";
       const tags = [];
 
       if (t.fire) tags.push(`<span class="tag">🔥</span>`);
       if (t.type !== EMPTY) tags.push(`<span class="tag">Lv ${t.lvl}</span>`);
 
-      // needs tags
       if (yld.needs) {
         if (yld.needs.includes("⚡")) tags.push(`<span class="tag">⚡</span>`);
         if (yld.needs.includes("💧")) tags.push(`<span class="tag">💧</span>`);
       }
 
-      // preview highlight on hover
+      // hover highlight (preview frame)
       if (state.hoverIndex === i) cls += " preview";
 
-      // action validation for styling
+      // canAct rules (affects green/red border)
       const isOccupied = t.type !== EMPTY;
-      const tool = state.tool;
-
       let canAct = true;
+
       if (tool === "bulldoze") canAct = isOccupied;
       else if (tool === "repair") canAct = !!t.fire;
       else if (tool === "upgrade") canAct = isOccupied && !t.fire && t.lvl < MAX_LVL;
-      else {
-        // building placement
-        canAct = !isOccupied && state.cash >= buildingCost(tool);
+      else canAct = !isOccupied && state.cash >= buildingCost(tool);
+
+      cls += canAct ? " good" : " bad";
+
+      // ✅ Preview icon ONLY on hovered tile
+      let icon = TYPES[t.type]?.icon || "⬜";
+      if (t.type === EMPTY && state.hoverIndex === i && TYPES[tool]) {
+        icon = TYPES[tool].icon;
       }
 
-      if (!canAct) cls += " bad";
-      else cls += " good";
+      const sub = t.type === EMPTY ? "" : (yld.mood || yld.needs || "");
 
-      // show tiny mood/needs
-      sub = t.type === EMPTY ? "" : (yld.mood || yld.needs || "");
-
-      // placement preview: show ghost icon when empty + build tool selected
-      let icon = TYPES[t.type]?.icon || "⬜";
-      if (t.type === EMPTY && TYPES[tool]) icon = TYPES[tool].icon;
-
-      // tooltip with yields + costs
+      // tooltip
       let tip = "";
       if (tool === "upgrade" && isOccupied){
-        tip = `${TYPES[t.type].name} (Lv ${t.lvl}) • Upgrade cost: $${fmt(upgradeCost(t))} • Passive: $${fmt(yld.passive)}/sec • Tap: +$${fmt(yld.tap)}`;
+        tip = `${TYPES[t.type].name} (Lv ${t.lvl}) • Upgrade cost: $${fmt(upgradeCost(t))} • Passive: $${fmt(yld.passive)}/sec • Tap: +$${fmt(yld.tap)} ${yld.needs ? "• " + yld.needs : ""}`;
       } else if (tool === "repair" && t.fire){
         tip = `${TYPES[t.type].name} (Lv ${t.lvl}) • Repair cost: $${fmt(repairCost(t))}`;
       } else if (tool === "bulldoze" && isOccupied){
         tip = `${TYPES[t.type].name} (Lv ${t.lvl}) • Refund: $${fmt(bulldozeRefund(t))}`;
+      } else if (t.type === EMPTY && TYPES[tool]) {
+        tip = `Empty land • Place ${TYPES[tool].name} cost $${fmt(buildingCost(tool))}`;
       } else {
         tip = `${t.type===EMPTY ? "Empty land" : `${TYPES[t.type].name} (Lv ${t.lvl})`} • Passive: $${fmt(yld.passive)}/sec • Tap: +$${fmt(yld.tap)} ${yld.needs ? "• " + yld.needs : ""}`;
       }
@@ -1299,8 +1334,11 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="s">${sub}</div>
       `;
 
+      // hover
       div.addEventListener("mouseenter", () => { state.hoverIndex = i; render(); });
       div.addEventListener("mouseleave", () => { state.hoverIndex = null; render(); });
+
+      // click
       div.addEventListener("click", () => tryActionOn(x,y));
 
       grid.appendChild(div);
@@ -1308,9 +1346,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------- Boot --------------------
+  function fastForwardMissions(){
+    while (state.missionIndex < MISSIONS.length && MISSIONS[state.missionIndex].check(state)) state.missionIndex++;
+  }
+
   load();
-  // mission fast-forward if already done (imported saves, etc.)
-  while (state.missionIndex < MISSIONS.length && MISSIONS[state.missionIndex].check(state)) state.missionIndex++;
+  fastForwardMissions();
   render();
 
   setInterval(() => {
