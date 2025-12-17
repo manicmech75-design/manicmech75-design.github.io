@@ -1,4 +1,4 @@
-// Flip City — Builder Edition v7.1
+// Flip City — Builder Edition v7.1 (CLEAN)
 // Activity Meter: "Collect Revenue" is earned (Activity fills over time; collect only when charged).
 // Adds: Support email cityflipsupport@gmail.com in Help + footer.
 
@@ -313,6 +313,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------------------- Helpers --------------------
   const now = () => Date.now();
   const SAVE_KEY = "flipcity_builder_v71";
+  const COLLECT_MIN = 10;        // percent
+  const COLLECT_COOLDOWN = 800;  // ms
 
   const fmt = (n) => {
     if (!Number.isFinite(n)) return "∞";
@@ -595,9 +597,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tap += yld.tap;
       activityRate += yld.activity;
     }
-
-    // tiny stipend so game never hard-locks
-    passive += 0.05;
+    passive += 0.05; // tiny stipend so game never hard-locks
 
     const ev = currentEventMults();
     passive *= ev.passMult;
@@ -762,7 +762,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (anyFire) return { text: `🧯 <b>What to do next:</b> A building is on fire — switch to <b>Repair</b> and click it.`, suggest: "repair" };
 
     if (cash < cheapest){
-      if (state.activity >= 10) return { text: `💰 <b>What to do next:</b> You’ve earned revenue — click <b>Collect Revenue</b>.`, suggest: null };
+      if (state.activity >= COLLECT_MIN) return { text: `💰 <b>What to do next:</b> You’ve earned revenue — click <b>Collect Revenue</b>.`, suggest: null };
       return { text: `⏳ <b>What to do next:</b> Wait a moment for <b>Passive</b> + <b>Activity</b> to accumulate. Build Shops to charge Activity faster.`, suggest: "shop" };
     }
 
@@ -779,7 +779,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (maxLevelAny() < 2) return { text: `⬆️ <b>What to do next:</b> Use Upgrade on your best buildings to scale faster.`, suggest: "upgrade" };
 
-    if (state.activity < 10) return { text: `📈 <b>What to do next:</b> Grow commerce (Shops + Roads) to charge Activity, then collect.`, suggest: "shop" };
+    if (state.activity < COLLECT_MIN) return { text: `📈 <b>What to do next:</b> Grow commerce (Shops + Roads) to charge Activity, then collect.`, suggest: "shop" };
 
     return { text: `✅ <b>What to do next:</b> Optimize placement, upgrade key tiles, and collect revenue when Activity is charged.`, suggest: null };
   }
@@ -852,18 +852,13 @@ document.addEventListener("DOMContentLoaded", () => {
     state.cash -= cost;
     state.board[i] = { type: tool, lvl: 0, fire: false };
 
-    if (tool === "shop") toast("Built: 🏪 Shop (Activity will fill faster)");
-    else toast(`Built: ${meta.icon} ${meta.name}`);
-
+    toast(tool === "shop" ? "Built: 🏪 Shop (Activity will fill faster)" : `Built: ${meta.icon} ${meta.name}`);
     flashTile(i);
     nextMissionIfComplete();
     render(); save();
   }
 
-  // -------------------- Activity + Collect Revenue --------------------
-  const COLLECT_MIN = 10;        // percent
-  const COLLECT_COOLDOWN = 800;  // ms
-
+  // -------------------- Activity / Revenue --------------------
   function activityPerSecond(){
     const t = totals();
     return clamp(0.10 + t.activityRate * 0.60, 0, 18);
@@ -906,7 +901,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     state.activity = clamp(state.activity + activityPerSecond() * dt, 0, 100);
-
     tickEvents();
 
     if (tNow - state.lastSaveAt > 10_000) save();
@@ -1392,77 +1386,6 @@ document.addEventListener("DOMContentLoaded", () => {
       grid.appendChild(div);
     }
   }
-
-  // -------------------- Activity helpers --------------------
-  const COLLECT_MIN = 10;        // percent
-  const COLLECT_COOLDOWN = 800;  // ms
-
-  function activityPerSecond(){
-    const t = totals();
-    return clamp(0.10 + t.activityRate * 0.60, 0, 18);
-  }
-
-  function collectRevenue(){
-    const t = totals();
-    const act = clamp(state.activity, 0, 100);
-
-    if (now() - state.lastCollectAt < COLLECT_COOLDOWN) return;
-    if (act < COLLECT_MIN) return toast("Not enough Activity yet.");
-
-    const capacity = (1 + t.tap);
-    const payout = capacity * (act / 100) * 12;
-
-    pushUndo();
-    state.cash += payout;
-    state.totalEarned += payout;
-
-    state.activity = 0;
-    state.lastCollectAt = now();
-
-    toast(`Collected revenue: +$${fmt(payout)}`);
-    nextMissionIfComplete();
-    render();
-    save();
-  }
-
-  // -------------------- Tick --------------------
-  function tick(){
-    const tNow = now();
-    const dt = (tNow - state.lastTickAt) / 1000;
-    state.lastTickAt = tNow;
-
-    const t = totals();
-    const gain = t.passive * dt;
-    if (gain > 0){
-      state.cash += gain;
-      state.totalEarned += gain;
-    }
-
-    state.activity = clamp(state.activity + activityPerSecond() * dt, 0, 100);
-
-    tickEvents();
-    if (tNow - state.lastSaveAt > 10_000) save();
-  }
-
-  // -------------------- Save / Load --------------------
-  function exportSave(){
-    const data = {
-      v: 71,
-      cash: state.cash,
-      totalEarned: state.totalEarned,
-      board: state.board,
-      tool: state.tool,
-      up: state.up,
-      missionIndex: state.missionIndex,
-      event: state.event,
-      seenIntro: state.seenIntro,
-      activity: state.activity
-    };
-    return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  }
-
-  // already defined above: importSave, save, load, etc.
-  // (kept as-is in this full file)
 
   // -------------------- Boot --------------------
   function fastForwardMissions(){
