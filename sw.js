@@ -13,9 +13,8 @@ const ASSETS = [
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    // Add one-by-one so one missing file doesn't nuke the whole install
     for (const url of ASSETS) {
-      try { await cache.add(url); } catch (e) { /* ignore */ }
+      try { await cache.add(url); } catch (_) {}
     }
     self.skipWaiting();
   })());
@@ -31,7 +30,6 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-
   if (!req.url.startsWith(self.location.origin)) return;
 
   if (req.mode === "navigate") {
