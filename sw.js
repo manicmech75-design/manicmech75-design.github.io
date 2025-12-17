@@ -1,4 +1,4 @@
-const CACHE_NAME = "cityflip-cache-v7";
+const CACHE_NAME = "cityflip-cache-v9";
 
 const ASSETS = [
   "./",
@@ -11,48 +11,45 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    for (const url of ASSETS) {
-      try { await cache.add(url); } catch (_) {}
-    }
-    self.skipWaiting();
-  })());
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k))));
-    self.clients.claim();
-  })());
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((key) => (key === CACHE_NAME ? null : caches.delete(key))))
+    )
+  );
+  self.clients.claim();
+});
+
+// Allow the page to tell SW to activate immediately
+self.addEventListener("message", (event) => {
+  if (event?.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
+
   if (!req.url.startsWith(self.location.origin)) return;
 
+  // Navigation: network first, then cache, then offline page
   if (req.mode === "navigate") {
-    event.respondWith((async () => {
-      try {
-        const res = await fetch(req);
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(req, res.clone());
-        return res;
-      } catch {
-        const cached = await caches.match(req);
-        return cached || caches.match("./offline.html") || new Response("Offline", { status: 200 });
-      }
-    })());
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+          return res;
+        })
+        .catch(() =>
+          caches.match("./index.html").then((hit) => hit || caches.match("./offline.html"))
+        )
+    );
     return;
   }
 
-  event.respondWith((async () => {
-    const cached = await caches.match(req);
-    if (cached) return cached;
-    const res = await fetch(req);
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(req, res.clone());
-    return res;
-  })());
+  // Assets: cache-first
+  event.respondWith(caches.match(req).then((hit) => hit || fetch(req)));
 });
