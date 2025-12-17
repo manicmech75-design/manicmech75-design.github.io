@@ -92,16 +92,23 @@ function createTilesIfMissing() {
 }
 
 function renderTiles() {
+  const emojis = ["🏙️","🏢","🏠","🏬","🏟️","🏗️","🌉","🚇","🌆"];
+
   els.tiles.innerHTML = "";
   state.tiles.forEach((t, idx) => {
     const btn = document.createElement("button");
     btn.className = "tileBtn";
 
     const val = tileTapValue(t.level);
+    const em = emojis[idx % emojis.length];
 
     btn.innerHTML = `
-      <div>🏙️ Tile ${idx + 1} <small>(Lvl ${t.level})</small></div>
-      <small>Tap earns ~${fmtMoney(val)}</small>
+      <div class="tileArt">
+        <span class="emoji">${em}</span>
+        <span>Lvl ${t.level}</span>
+      </div>
+      <div class="tileTitle">Tile ${idx + 1}</div>
+      <div class="tileMeta">Tap earns ~${fmtMoney(val)}</div>
     `;
 
     btn.addEventListener("click", () => {
@@ -113,6 +120,10 @@ function renderTiles() {
       render();
       renderTiles();
     });
+
+    els.tiles.appendChild(btn);
+  });
+}
 
     els.tiles.appendChild(btn);
   });
