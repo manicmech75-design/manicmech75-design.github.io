@@ -52,7 +52,7 @@
       top: 0;
       background: rgba(11,18,32,.85);
       backdrop-filter: blur(10px);
-      z-index: 5;
+      z-index: 10;
     }
     header h1 { margin: 0; font-size: 18px; letter-spacing: .3px; }
     .wrap { max-width: 980px; margin: 0 auto; padding: 14px; }
@@ -67,20 +67,26 @@
       box-shadow: 0 0 0 1px rgba(255,255,255,.02), 0 18px 60px var(--glow);
     }
 
-    .adSlot {
-      margin-top: 12px;
-      border-radius: 14px;
-      border: 1px dashed rgba(255,255,255,.28);
-      background: rgba(0,0,0,.18);
-      padding: 12px;
-      min-height: 76px;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      color: var(--muted);
-      font-weight: 800;
+    .btnrow { display: flex; flex-wrap: wrap; gap: 10px; }
+    button.headerBtn {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: var(--btnText);
+      background: var(--btn);
     }
-    .adSlot small { display:block; opacity:.8; font-weight:700; margin-top:4px; }
+    button.headerBtn.secondary {
+      color: #fff;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    button.headerBtn.danger {
+      color: #fff;
+      background: rgba(255, 80, 80, .25);
+      border: 1px solid rgba(255, 80, 80, .45);
+    }
 
     .stats {
       display: grid;
@@ -104,7 +110,7 @@
       border-radius: 12px;
       background: rgba(255,255,255,.10);
       border: 1px solid rgba(255,255,255,.16);
-      display: flex;
+      display: none;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
@@ -118,6 +124,21 @@
       font-size: 12px;
       opacity: .95;
     }
+
+    .adSlot {
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,.28);
+      background: rgba(0,0,0,.18);
+      padding: 12px;
+      min-height: 76px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .adSlot small { display:block; opacity:.8; font-weight:700; margin-top:4px; }
 
     .tiles {
       margin-top: 12px;
@@ -140,7 +161,6 @@
       gap: 8px;
       position: relative;
       overflow: hidden;
-      background: linear-gradient(180deg, rgba(0,255,255,.95), rgba(120,0,255,.22));
     }
     .tile::after{
       content:"";
@@ -168,7 +188,7 @@
     .tile .small { opacity: .9; font-size: 12px; line-height: 1.2; color: var(--muted); }
     .tile .gain { font-size: 14px; font-weight: 950; }
 
-    .tileBtn {
+    .tileBtn, .shopBtn {
       width: 100%;
       border: 0;
       border-radius: 12px;
@@ -178,28 +198,7 @@
       color: var(--btnText);
       background: var(--btn);
     }
-    .tileBtn:disabled { opacity: .55; cursor: not-allowed; }
-
-    .btnrow { display: flex; flex-wrap: wrap; gap: 10px; }
-    button.headerBtn {
-      border: 0;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-weight: 900;
-      cursor: pointer;
-      color: var(--btnText);
-      background: var(--btn);
-    }
-    button.headerBtn.secondary {
-      color: #fff;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.18);
-    }
-    button.headerBtn.danger {
-      color: #fff;
-      background: rgba(255, 80, 80, .25);
-      border: 1px solid rgba(255, 80, 80, .45);
-    }
+    .tileBtn:disabled, .shopBtn:disabled { opacity: .55; cursor: not-allowed; }
 
     .shopItem {
       padding: 12px;
@@ -211,12 +210,6 @@
     .shopItem h3 { margin: 0 0 6px; font-size: 15px; }
     .shopItem p { margin: 0; opacity: .9; font-size: 13px; color: var(--muted); }
     .shopItem .price { margin-top: 8px; font-weight: 950; }
-    .shopItem .shopBtn {
-      margin-top: 10px; width: 100%;
-      border: 0; border-radius: 12px;
-      padding: 10px 12px; font-weight: 950;
-      cursor: pointer; color: var(--btnText); background: var(--btn);
-    }
 
     .selectRow {
       display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -287,7 +280,7 @@
       border-color: rgba(0,255,160,.35);
     }
 
-    /* Offline modal */
+    /* Modal */
     .modalBackdrop {
       position: fixed; inset: 0;
       background: rgba(0,0,0,.55);
@@ -295,11 +288,11 @@
       align-items: center;
       justify-content: center;
       padding: 18px;
-      z-index: 20;
+      z-index: 30;
     }
     .modal {
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       background: rgba(11,18,32,.96);
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 16px;
@@ -308,8 +301,9 @@
     }
     .modal h3 { margin: 0 0 8px; }
     .modal p { margin: 0 0 12px; opacity: .92; color: var(--muted); }
+    .modal .row { display:flex; gap:10px; }
     .modal .modalBtn {
-      width: 100%;
+      flex: 1;
       border: 0;
       border-radius: 12px;
       padding: 10px 12px;
@@ -317,6 +311,28 @@
       cursor: pointer;
       color: var(--btnText);
       background: var(--btn);
+    }
+    .modal .modalBtn.secondary {
+      color: #fff;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(11,18,32,.92);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 900;
+      color: #fff;
+      display: none;
+      z-index: 40;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
     }
   </style>
 </head>
@@ -334,6 +350,7 @@
 
   <div class="wrap">
     <div class="grid">
+      <!-- LEFT -->
       <div class="card">
         <h2 style="margin:0 0 10px;">Dashboard</h2>
 
@@ -352,22 +369,28 @@
           </div>
         </div>
 
-        <div class="boostBar" id="boostBar" style="display:none;">
+        <div class="boostBar" id="boostBar">
           <div>Boost Active</div>
           <div class="pill" id="boostPill">2x • 00:00</div>
         </div>
 
         <div class="adSlot" id="bannerSlot">
           Banner Ad Slot
-          <small>(Drop your AdSense unit here later)</small>
+          <small>(Insert your ad unit here later)</small>
         </div>
 
         <h2 style="margin:16px 0 10px;">City Tiles</h2>
         <div id="tiles" class="tiles"></div>
 
+        <div class="adSlot" id="footerSlot">
+          Footer Ad Slot
+          <small>(Optional second ad placement)</small>
+        </div>
+
         <div class="log" id="log"></div>
       </div>
 
+      <!-- RIGHT -->
       <div class="card">
         <h2 style="margin:0 0 10px;">Upgrades</h2>
 
@@ -392,12 +415,28 @@
           <button class="shopBtn" id="buyTileUp">Buy</button>
         </div>
 
+        <h2 style="margin:16px 0 10px;">Reward</h2>
+        <div class="shopItem">
+          <h3>Watch Ad → 2x Boost</h3>
+          <p>Simulated button (ready for real rewarded ads later).</p>
+          <div class="price" id="rewardStatus">Ready</div>
+          <button class="shopBtn" id="rewardBtn">Get Boost</button>
+        </div>
+
         <h2 style="margin:16px 0 10px;">Daily Streak</h2>
         <div class="shopItem">
           <h3 id="streakTitle">Day 1 Reward</h3>
           <p id="streakDesc">Claim your daily bonus to keep your streak.</p>
           <div class="price" id="streakStatus">Ready</div>
           <button class="shopBtn" id="claimDailyBtn">Claim</button>
+        </div>
+
+        <h2 style="margin:16px 0 10px;">Prestige</h2>
+        <div class="shopItem">
+          <h3>Rebuild the City</h3>
+          <p>Reset progress for a permanent multiplier.</p>
+          <div class="price" id="prestigeInfo">Multiplier: 1.00x</div>
+          <button class="shopBtn" id="prestigeBtn">Prestige</button>
         </div>
 
         <h2 style="margin:16px 0 10px;">Achievements</h2>
@@ -440,6 +479,20 @@
       <button class="modalBtn" id="offlineOk">Collect</button>
     </div>
   </div>
+
+  <!-- Prestige confirm modal -->
+  <div class="modalBackdrop" id="prestigeModal">
+    <div class="modal">
+      <h3>Prestige?</h3>
+      <p id="prestigeModalText">This will reset your upgrades and tile levels for a permanent multiplier.</p>
+      <div class="row">
+        <button class="modalBtn secondary" id="prestigeCancel">Cancel</button>
+        <button class="modalBtn" id="prestigeConfirm">Prestige</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved</div>
 
   <script>
     if ("serviceWorker" in navigator) {
