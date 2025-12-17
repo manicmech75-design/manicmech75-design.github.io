@@ -11,7 +11,7 @@
 
   <title>City Flip</title>
 
-  <!-- Google AdSense (Auto ads enabled by account/site) -->
+  <!-- Google AdSense (Auto ads + manual units supported) -->
   <script async
     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9059824893360194"
     crossorigin="anonymous"></script>
@@ -174,7 +174,7 @@
     .shopItem p { margin: 0; opacity: .9; font-size: 13px; color: var(--muted); }
     .shopItem .price { margin-top: 8px; font-weight: 950; }
 
-    .shopBtn {
+    .tileBtn, .shopBtn {
       width: 100%;
       border: 0;
       border-radius: 12px;
@@ -183,8 +183,36 @@
       cursor: pointer;
       color: var(--btnText);
       background: var(--btn);
-      margin-top: 10px;
     }
+
+    .selectRow {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding: 10px 12px; border-radius: 12px;
+      background: var(--panel); border: 1px solid var(--panelBorder);
+      margin-top: 10px;
+      font-weight: 900;
+    }
+    select {
+      width: 160px;
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color: #fff;
+      font-weight: 900;
+      outline: none;
+    }
+    option { color: #000; }
+
+    .toggles { margin-top: 12px; display: grid; gap: 10px; }
+    .toggleRow {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 12px; border-radius: 12px;
+      background: var(--panel); border: 1px solid var(--panelBorder);
+      font-size: 14px; font-weight: 900;
+    }
+    .toggleRow small { opacity: .85; font-weight: 800; color: var(--muted); }
+    .toggleRow input { transform: scale(1.2); }
 
     .modalBackdrop {
       position: fixed; inset: 0;
@@ -195,7 +223,6 @@
       padding: 18px;
       z-index: 30;
     }
-
     .modal {
       width: 100%;
       max-width: 440px;
@@ -204,6 +231,24 @@
       border-radius: 16px;
       padding: 14px;
       box-shadow: 0 24px 80px rgba(0,0,0,.55);
+    }
+    .modal h3 { margin: 0 0 8px; }
+    .modal p { margin: 0 0 12px; opacity: .92; color: var(--muted); }
+    .modal .row { display:flex; gap:10px; }
+    .modal .modalBtn {
+      flex: 1;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 950;
+      cursor: pointer;
+      color: var(--btnText);
+      background: var(--btn);
+    }
+    .modal .modalBtn.secondary {
+      color: #fff;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
     }
 
     .toast {
@@ -261,8 +306,7 @@
           <div class="pill" id="boostPill">2x • 00:00</div>
         </div>
 
-        <!-- OPTIONAL: Manual Ad Unit (ONLY if you have a real slot id)
-             If you are using Auto ads only, delete this entire block. -->
+        <!-- Manual Ad Unit (ONLY works if this slot exists in AdSense) -->
         <div class="adSlot" id="bannerSlot">
           <ins class="adsbygoogle"
                style="display:block"
@@ -277,6 +321,19 @@
 
         <h2 style="margin:16px 0 10px;">City Tiles</h2>
         <div id="tiles" class="tiles"></div>
+
+        <!-- Optional second slot (use a DIFFERENT real slot id if you create it) -->
+        <div class="adSlot" id="footerSlot">
+          <ins class="adsbygoogle"
+               style="display:block"
+               data-ad-client="ca-pub-9059824893360194"
+               data-ad-slot="8604672263"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+          <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+          </script>
+        </div>
 
         <div class="log" id="log"></div>
       </div>
@@ -330,6 +387,31 @@
           <button class="shopBtn" id="prestigeBtn">Prestige</button>
         </div>
 
+        <h2 style="margin:16px 0 10px;">Achievements</h2>
+        <div class="achList" id="achList"></div>
+
+        <h2 style="margin:16px 0 10px;">Skins</h2>
+        <div class="selectRow">
+          <div>Theme</div>
+          <select id="themeSelect">
+            <option value="neon">Neon</option>
+            <option value="sunset">Sunset</option>
+            <option value="emerald">Emerald</option>
+            <option value="midnight">Midnight</option>
+          </select>
+        </div>
+
+        <div class="toggles">
+          <div class="toggleRow">
+            <div>Sound <br><small>Tap “click” feedback</small></div>
+            <input type="checkbox" id="soundToggle">
+          </div>
+          <div class="toggleRow">
+            <div>Haptics <br><small>Vibrate on tap</small></div>
+            <input type="checkbox" id="hapticToggle">
+          </div>
+        </div>
+
         <p style="margin-top:12px;opacity:.85;font-size:13px;">
           Autosaves every few seconds + on background/close.
         </p>
@@ -341,7 +423,7 @@
     <div class="modal">
       <h3>Welcome back!</h3>
       <p id="offlineText">You earned $0 while away.</p>
-      <button class="shopBtn" id="offlineOk">Collect</button>
+      <button class="modalBtn" id="offlineOk">Collect</button>
     </div>
   </div>
 
@@ -349,9 +431,9 @@
     <div class="modal">
       <h3>Prestige?</h3>
       <p id="prestigeModalText">This will reset your upgrades and tile levels for a permanent multiplier.</p>
-      <div style="display:flex; gap:10px;">
-        <button class="shopBtn" id="prestigeCancel" style="background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.18);">Cancel</button>
-        <button class="shopBtn" id="prestigeConfirm">Prestige</button>
+      <div class="row">
+        <button class="modalBtn secondary" id="prestigeCancel">Cancel</button>
+        <button class="modalBtn" id="prestigeConfirm">Prestige</button>
       </div>
     </div>
   </div>
