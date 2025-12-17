@@ -125,10 +125,6 @@ function renderTiles() {
   });
 }
 
-    els.tiles.appendChild(btn);
-  });
-}
-
 function getTapBoostCost() {
   return Math.floor(25 * Math.pow(1.35, state.tapBoostLevel));
 }
