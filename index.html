@@ -5,21 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flip City</title>
 
-  <!-- PWA (optional, safe if you keep the files) -->
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#0b1220">
 
-  <!-- (optional) if you have icons, keep these; if not, you can delete them -->
   <link rel="icon" href="./icons/icon-192.png">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
 </head>
 <body>
   <div id="game"></div>
-
-  <!-- IMPORTANT: use ./ for GitHub Pages -->
   <script src="./game.js"></script>
 
-  <!-- Optional service worker registration -->
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
