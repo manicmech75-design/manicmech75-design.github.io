@@ -1,10 +1,12 @@
-<!DOCTYPE html>
+<!-- index.html -->
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
 
-  <!-- iOS PWA support -->
+  <!-- iOS PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="City Flip">
@@ -12,213 +14,163 @@
 
   <!-- PWA -->
   <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="theme-color" content="#0b1220">
   <link rel="icon" href="./icons/icon-192.png">
 
   <title>City Flip</title>
-
-  <!-- ✅ Google AdSense AUTO ADS (no slot needed) -->
-  <script async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9059824893360194"
-    crossorigin="anonymous"></script>
-
   <link rel="stylesheet" href="./styles.css" />
+
+  <!-- OPTIONAL: Google AdSense Auto Ads (uncomment + set your client) -->
+  <!--
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXX"
+    crossorigin="anonymous"></script>
+  -->
 </head>
 
 <body>
-  <div class="bgSkyline" aria-hidden="true"></div>
-
-  <header class="topbar">
-    <div class="brand">
-      <div class="logoDot" aria-hidden="true"></div>
-      <div>
-        <div class="title">City Flip</div>
-        <div class="subtitle">Build • Merge • Upgrade</div>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="titles">
+          <div class="name">City Flip</div>
+          <div class="tagline" id="tagline">Merge buildings. Grow a skyline. Beat your best.</div>
+        </div>
       </div>
-    </div>
 
-    <div class="stats">
-      <div class="stat">
-        <div class="statLabel">Coins</div>
-        <div class="statValue" id="coins">0</div>
+      <div class="top-actions">
+        <button id="btnSound" class="chip" aria-label="Toggle sound">
+          <span class="dot" aria-hidden="true"></span><span id="soundLabel">Sound: On</span>
+        </button>
+        <button id="btnHelp" class="chip" aria-label="How to play">How to Play</button>
       </div>
-      <div class="stat">
-        <div class="statLabel">Income / sec</div>
-        <div class="statValue" id="ips">0</div>
-      </div>
-      <div class="stat">
-        <div class="statLabel">Prestige</div>
-        <div class="statValue" id="prestige">0</div>
-      </div>
-    </div>
+    </header>
 
-    <div class="actions">
-      <button class="btn" id="btnHelp">Tutorial</button>
-      <button class="btn" id="btnSettings">Settings</button>
-    </div>
-  </header>
+    <main class="stage">
+      <!-- Animated background -->
+      <canvas id="bgCanvas" aria-hidden="true"></canvas>
 
-  <!-- Optional Manual Ad Unit (only if you have a slot id; otherwise remove this whole block)
-  <div class="adWrap" aria-label="Advertisement">
-    <ins class="adsbygoogle"
-      style="display:block"
-      data-ad-client="ca-pub-9059824893360194"
-      data-ad-slot="PUT_SLOT_ID_HERE"
-      data-ad-format="auto"
-      data-full-width-responsive="true"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-  </div>
-  -->
+      <!-- HUD -->
+      <section class="hud" aria-label="Game status">
+        <div class="stat">
+          <div class="statLabel">Score</div>
+          <div class="statValue" id="score">0</div>
+        </div>
+        <div class="stat">
+          <div class="statLabel">Coins</div>
+          <div class="statValue" id="coins">0</div>
+        </div>
+        <div class="stat">
+          <div class="statLabel">Streak</div>
+          <div class="statValue" id="streak">x1</div>
+        </div>
+      </section>
 
-  <main class="layout">
-    <section class="boardWrap">
-      <div class="boardHeader">
-        <div>
-          <div class="boardTitle">Your City</div>
-          <div class="boardHint">
-            Tap empty = place • Tap same tier = <b>merge</b> • Tap different = select/move
+      <!-- Next tile + Mission -->
+      <section class="panel">
+        <div class="nextWrap">
+          <div class="nextTitle">Next Building</div>
+          <div class="nextCard" id="nextCard" role="img" aria-label="Next building preview">
+            <div class="nextGlyph" id="nextGlyph"></div>
+            <div class="nextInfo">
+              <div class="nextName" id="nextName">Block</div>
+              <div class="nextHint">Tap an empty spot to place it.</div>
+            </div>
           </div>
         </div>
 
-        <div class="boardBtns">
-          <button class="btn btnPrimary" id="btnSpawn">Place</button>
-          <button class="btn" id="btnDaily">Daily</button>
-          <button class="btn" id="btnPrestige">Prestige</button>
+        <div class="missionWrap">
+          <div class="nextTitle">Mission</div>
+          <div class="missionCard">
+            <div class="missionText" id="missionText">Make your first merge.</div>
+            <div class="missionProg">
+              <div class="bar"><div class="barFill" id="missionFill"></div></div>
+              <div class="missionMeta"><span id="missionNow">0</span>/<span id="missionGoal">1</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grid -->
+      <section class="boardWrap" aria-label="City grid">
+        <div id="board" class="board" role="grid" aria-label="4 by 4 grid"></div>
+      </section>
+
+      <!-- Bottom buttons -->
+      <footer class="bottombar">
+        <button id="btnUndo" class="btn secondary" disabled>Undo</button>
+        <button id="btnBoost" class="btn secondary">Boost</button>
+        <button id="btnNew" class="btn primary">New Run</button>
+      </footer>
+
+      <!-- Toast -->
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <!-- Tutorial / Help Modal -->
+      <div id="modal" class="modal" aria-hidden="true">
+        <div class="modalCard" role="dialog" aria-modal="true" aria-label="How to play">
+          <div class="modalHead">
+            <div class="modalTitle">How to Play</div>
+            <button id="btnCloseModal" class="x" aria-label="Close">✕</button>
+          </div>
+
+          <div class="modalBody">
+            <div class="howRow">
+              <div class="howNum">1</div>
+              <div>
+                <div class="howTitle">Place the “Next Building”</div>
+                <div class="howText">Tap an empty tile. Your goal is to build the most valuable skyline.</div>
+              </div>
+            </div>
+
+            <div class="howRow">
+              <div class="howNum">2</div>
+              <div>
+                <div class="howTitle">Merge 3+ touching matches</div>
+                <div class="howText">When <b>3 or more</b> of the same building touch (orthogonal), they merge into the next tier and give coins + score.</div>
+              </div>
+            </div>
+
+            <div class="howRow">
+              <div class="howNum">3</div>
+              <div>
+                <div class="howTitle">Chain reactions = streaks</div>
+                <div class="howText">Bigger chains build your streak multiplier. Keep the board open and plan merges.</div>
+              </div>
+            </div>
+
+            <div class="howRow">
+              <div class="howNum">★</div>
+              <div>
+                <div class="howTitle">Boost</div>
+                <div class="howText">Spend coins to “reroll” your next building. Great when you’re stuck.</div>
+              </div>
+            </div>
+
+            <div class="ctaRow">
+              <button id="btnPlay" class="btn primary big">Play</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="grid" id="grid" aria-label="City grid"></div>
-
-      <div class="hudRow">
-        <div class="hudChip" id="selectedChip">Selected: None</div>
-        <div class="hudChip" id="goalChip">Goal: Merge to unlock higher tiers</div>
-      </div>
-
-      <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    </section>
-
-    <aside class="panel">
-      <div class="panelHeader">
-        <div class="panelTitle">Shop & Upgrades</div>
-        <div class="panelSubtitle">Boost income, reduce costs, expand grid</div>
-      </div>
-
-      <div class="sectionTitle">Actions</div>
-      <div class="actionRow">
-        <button class="btn btnPrimary full" id="btnCollect">Collect Bonus</button>
-        <button class="btn full" id="btnAutoMerge">Auto-Merge Hint</button>
-      </div>
-
-      <div class="sectionTitle">Upgrades</div>
-      <div class="upgradeList" id="upgradeList"></div>
-
-      <div class="sectionTitle">Achievements</div>
-      <div class="achList" id="achList"></div>
-
-      <div class="panelFooter">
-        <button class="btn btnPrimary" id="btnSave">Save</button>
-        <button class="btn" id="btnReset">Reset</button>
-      </div>
-
-      <div class="supportRow">
-        <div class="supportLabel">Support:</div>
-        <a class="supportLink" href="mailto:support@cityflipgame.com?subject=City%20Flip%20Support">support@cityflipgame.com</a>
-      </div>
-    </aside>
-  </main>
-
-  <!-- Tutorial -->
-  <div class="modalOverlay" id="helpOverlay" aria-hidden="true">
-    <div class="modal">
-      <div class="modalTop">
-        <div class="modalTitle">How to Play</div>
-        <button class="iconBtn" id="helpClose" aria-label="Close">✕</button>
-      </div>
-      <div class="modalBody">
-        <ol class="steps">
-          <li><b>Place</b>: Tap <b>Place</b> to create a Tier 1 building on an empty tile.</li>
-          <li><b>Select</b>: Tap a building to select it, then tap an empty tile to move it.</li>
-          <li><b>Merge</b>: Tap a building then tap another of the <b>same tier</b> to merge → tier +1.</li>
-          <li><b>Income</b>: Buildings generate coins per second. Higher tier = more coins.</li>
-          <li><b>Upgrades</b>: Buy boosts (income, discounts, bigger grid).</li>
-          <li><b>Offline</b>: Earn coins while away (if enabled).</li>
-          <li><b>Prestige</b>: Reset for a permanent multiplier.</li>
-        </ol>
-        <div class="callout">
-          Pro tip: keep merging one “chain” up to high tiers for big income spikes.
+      <!-- First-load purpose overlay (crystal clear) -->
+      <div id="firstLoad" class="firstLoad" aria-hidden="true">
+        <div class="firstCard">
+          <div class="firstKicker">Build an addictive skyline in 30 seconds</div>
+          <div class="firstTitle">Tap to place. Merge 3+ to upgrade.</div>
+          <div class="firstSub">
+            Chain merges to raise your streak, earn coins, and chase a new high score.
+          </div>
+          <div class="firstActions">
+            <button id="btnStartNow" class="btn primary big">Start a Run</button>
+            <button id="btnLearn" class="btn secondary big">How it Works</button>
+          </div>
+          <div class="fine">Tip: Turn sound on — merges feel better.</div>
         </div>
       </div>
-      <div class="modalBottom">
-        <button class="btn btnPrimary" id="helpOk">Got it</button>
-      </div>
-    </div>
+    </main>
   </div>
 
-  <!-- Settings -->
-  <div class="modalOverlay" id="settingsOverlay" aria-hidden="true">
-    <div class="modal">
-      <div class="modalTop">
-        <div class="modalTitle">Settings</div>
-        <button class="iconBtn" id="settingsClose" aria-label="Close">✕</button>
-      </div>
-
-      <div class="modalBody">
-        <div class="settingRow">
-          <div>
-            <div class="settingName">Sounds</div>
-            <div class="settingDesc">Tap / merge / purchase tones</div>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="toggleSound" checked />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="settingRow">
-          <div>
-            <div class="settingName">Reduced motion</div>
-            <div class="settingDesc">Disables most animations</div>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="toggleMotion" />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="settingRow">
-          <div>
-            <div class="settingName">Offline earnings</div>
-            <div class="settingDesc">Earn coins while away</div>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="toggleOffline" checked />
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
-
-      <div class="modalBottom">
-        <button class="btn btnPrimary" id="settingsOk">Done</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Feedback -->
-  <div class="feedback" id="feedback" aria-hidden="true">
-    <div class="feedbackCard">
-      <div class="feedbackTitle" id="feedbackTitle">Nice!</div>
-      <div class="feedbackText" id="feedbackText">Saved.</div>
-      <button class="btn btnPrimary" id="feedbackOk">OK</button>
-    </div>
-  </div>
-
-  <script src="./game.js"></script>
-
-  <!-- PWA service worker (recommended) -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
-    }
-  </script>
+  <script src="./game.js" defer></script>
 </body>
 </html>
