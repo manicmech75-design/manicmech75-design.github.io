@@ -11,7 +11,7 @@
 
   <title>City Flip</title>
 
-  <!-- Google AdSense (Auto ads + manual units supported) -->
+  <!-- Google AdSense (AUTO ADS) -->
   <script async
     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9059824893360194"
     crossorigin="anonymous"></script>
@@ -129,20 +129,6 @@
       opacity: .95;
     }
 
-    .adSlot {
-      margin-top: 12px;
-      border-radius: 14px;
-      border: 1px dashed rgba(255,255,255,.28);
-      background: rgba(0,0,0,.18);
-      padding: 12px;
-      min-height: 76px;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      color: var(--muted);
-      font-weight: 800;
-    }
-
     .tiles {
       margin-top: 12px;
       display: grid;
@@ -232,24 +218,6 @@
       padding: 14px;
       box-shadow: 0 24px 80px rgba(0,0,0,.55);
     }
-    .modal h3 { margin: 0 0 8px; }
-    .modal p { margin: 0 0 12px; opacity: .92; color: var(--muted); }
-    .modal .row { display:flex; gap:10px; }
-    .modal .modalBtn {
-      flex: 1;
-      border: 0;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-weight: 950;
-      cursor: pointer;
-      color: var(--btnText);
-      background: var(--btn);
-    }
-    .modal .modalBtn.secondary {
-      color: #fff;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.18);
-    }
 
     .toast {
       position: fixed;
@@ -282,7 +250,6 @@
 
   <div class="wrap">
     <div class="grid">
-      <!-- LEFT -->
       <div class="card">
         <h2 style="margin:0 0 10px;">Dashboard</h2>
 
@@ -306,39 +273,12 @@
           <div class="pill" id="boostPill">2x • 00:00</div>
         </div>
 
-        <!-- Manual Ad Unit (ONLY works if this slot exists in AdSense) -->
-        <div class="adSlot" id="bannerSlot">
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-9059824893360194"
-               data-ad-slot="8604672263"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
-          <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-          </script>
-        </div>
-
         <h2 style="margin:16px 0 10px;">City Tiles</h2>
         <div id="tiles" class="tiles"></div>
-
-        <!-- Optional second slot (use a DIFFERENT real slot id if you create it) -->
-        <div class="adSlot" id="footerSlot">
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-9059824893360194"
-               data-ad-slot="8604672263"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
-          <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-          </script>
-        </div>
 
         <div class="log" id="log"></div>
       </div>
 
-      <!-- RIGHT -->
       <div class="card">
         <h2 style="margin:0 0 10px;">Upgrades</h2>
 
@@ -361,55 +301,6 @@
           <p>Boosts ALL tile tap bonuses.</p>
           <div class="price" id="tileUpPrice">$75</div>
           <button class="shopBtn" id="buyTileUp">Buy</button>
-        </div>
-
-        <h2 style="margin:16px 0 10px;">Reward</h2>
-        <div class="shopItem">
-          <h3>Watch Ad → 2x Boost</h3>
-          <p>Simulated button (ready for real rewarded ads later).</p>
-          <div class="price" id="rewardStatus">Ready</div>
-          <button class="shopBtn" id="rewardBtn">Get Boost</button>
-        </div>
-
-        <h2 style="margin:16px 0 10px;">Daily Streak</h2>
-        <div class="shopItem">
-          <h3 id="streakTitle">Day 1 Reward</h3>
-          <p id="streakDesc">Claim your daily bonus to keep your streak.</p>
-          <div class="price" id="streakStatus">Ready</div>
-          <button class="shopBtn" id="claimDailyBtn">Claim</button>
-        </div>
-
-        <h2 style="margin:16px 0 10px;">Prestige</h2>
-        <div class="shopItem">
-          <h3>Rebuild the City</h3>
-          <p>Reset progress for a permanent multiplier.</p>
-          <div class="price" id="prestigeInfo">Multiplier: 1.00x</div>
-          <button class="shopBtn" id="prestigeBtn">Prestige</button>
-        </div>
-
-        <h2 style="margin:16px 0 10px;">Achievements</h2>
-        <div class="achList" id="achList"></div>
-
-        <h2 style="margin:16px 0 10px;">Skins</h2>
-        <div class="selectRow">
-          <div>Theme</div>
-          <select id="themeSelect">
-            <option value="neon">Neon</option>
-            <option value="sunset">Sunset</option>
-            <option value="emerald">Emerald</option>
-            <option value="midnight">Midnight</option>
-          </select>
-        </div>
-
-        <div class="toggles">
-          <div class="toggleRow">
-            <div>Sound <br><small>Tap “click” feedback</small></div>
-            <input type="checkbox" id="soundToggle">
-          </div>
-          <div class="toggleRow">
-            <div>Haptics <br><small>Vibrate on tap</small></div>
-            <input type="checkbox" id="hapticToggle">
-          </div>
         </div>
 
         <p style="margin-top:12px;opacity:.85;font-size:13px;">
