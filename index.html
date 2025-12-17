@@ -23,193 +23,339 @@
     crossorigin="anonymous"></script>
 
   <style>
-    * { box-sizing: border-box; }
-
+    *{ box-sizing:border-box; }
     :root{
-      --bg1:#22124a;
-      --bg2:#050617;
-      --card: rgba(255,255,255,.06);
-      --cardBorder: rgba(255,255,255,.10);
-      --panel: rgba(0,0,0,.18);
-      --panelBorder: rgba(255,255,255,.08);
-      --text: #ffffff;
+      --bgA:#1a0f2e;
+      --bgB:#0a1022;
+      --panel: rgba(10,14,28,.72);
+      --panel2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.10);
+      --border2: rgba(255,255,255,.16);
+      --text:#fff;
       --muted: rgba(255,255,255,.85);
-      --btn: #ffffff;
-      --btnText:#0b1220;
-      --glow: rgba(0,255,255,.22);
+      --shadow: 0 24px 80px rgba(0,0,0,.55);
+      --radius: 16px;
+
+      --green:#31c26b;
+      --orange:#ff9d2d;
+      --red:#ff5252;
+      --gold:#ffd15a;
+      --cyan:#49d7ff;
+      --purple:#8e7bff;
     }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, var(--bg1), var(--bg2));
-      color: var(--text);
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(900px 540px at 50% -80px, rgba(255,150,60,.25), transparent 60%),
+        radial-gradient(900px 540px at 50% 140px, rgba(120,90,255,.22), transparent 55%),
+        radial-gradient(circle at top, #2a1550, var(--bgB));
     }
 
-    header {
-      padding: 14px 14px 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+    /* HERO */
+    .hero{
       position: sticky;
       top: 0;
-      background: rgba(11,18,32,.85);
-      backdrop-filter: blur(10px);
       z-index: 10;
+      padding: 14px 14px 10px;
+      background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.10));
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    header h1 { margin: 0; font-size: 18px; letter-spacing: .3px; }
-
-    .wrap { max-width: 980px; margin: 0 auto; padding: 14px; }
-    .grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; }
-    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--cardBorder);
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 0 0 1px rgba(255,255,255,.02), 0 18px 60px var(--glow);
+    .heroInner{
+      max-width: 980px;
+      margin: 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
+    .logoBadge{
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), transparent 45%),
+        linear-gradient(135deg, rgba(73,215,255,.35), rgba(142,123,255,.22));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 16px 40px rgba(0,0,0,.35);
+      display:grid;
+      place-items:center;
+      font-size: 20px;
+    }
+    .logoText{
+      line-height: 1.05;
+      min-width: 0;
+    }
+    .logoText .title{
+      font-size: 20px;
+      font-weight: 1000;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .logoText .subtitle{
+      margin-top: 2px;
+      font-size: 12px;
+      opacity: .85;
     }
 
-    .btnrow { display: flex; flex-wrap: wrap; gap: 10px; }
-    button.headerBtn {
+    .topBtns{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      justify-content:flex-end;
+    }
+    .btn{
       border: 0;
       border-radius: 12px;
       padding: 10px 12px;
-      font-weight: 900;
+      font-weight: 950;
       cursor: pointer;
-      color: var(--btnText);
-      background: var(--btn);
+      color:#0b1220;
+      background:#fff;
     }
-    button.headerBtn.secondary {
-      color: #fff;
+    .btn.ghost{
+      color:#fff;
       background: rgba(255,255,255,.12);
       border: 1px solid rgba(255,255,255,.18);
     }
-    button.headerBtn.danger {
-      color: #fff;
-      background: rgba(255, 80, 80, .25);
-      border: 1px solid rgba(255, 80, 80, .45);
+    .btn.danger{
+      color:#fff;
+      background: rgba(255,82,82,.22);
+      border: 1px solid rgba(255,82,82,.45);
     }
 
-    .stats {
-      display: grid;
+    /* SKYLINE DECOR */
+    .skyline{
+      max-width: 980px;
+      margin: 10px auto 0;
+      height: 56px;
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)),
+        radial-gradient(400px 120px at 30% 40%, rgba(255,150,60,.18), transparent 60%),
+        radial-gradient(400px 120px at 70% 40%, rgba(120,90,255,.18), transparent 60%);
+      border: 1px solid rgba(255,255,255,.10);
+      position: relative;
+      overflow:hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+    }
+    .skyline:before{
+      content:"";
+      position:absolute; inset:auto 0 0 0;
+      height: 38px;
+      background:
+        linear-gradient(180deg, transparent, rgba(0,0,0,.35)),
+        repeating-linear-gradient(
+          90deg,
+          rgba(0,0,0,.0) 0 16px,
+          rgba(0,0,0,.25) 16px 22px
+        );
+      mask-image: linear-gradient(180deg, transparent, #000 40%);
+      opacity: .8;
+    }
+    .skyline:after{
+      content:"";
+      position:absolute; inset: 0;
+      background:
+        linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+      transform: translateX(-60%);
+      animation: shine 6s linear infinite;
+      opacity:.35;
+    }
+    @keyframes shine{
+      0%{ transform: translateX(-60%); }
+      100%{ transform: translateX(60%); }
+    }
+
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 14px; }
+    .grid{ display:grid; grid-template-columns: 1.25fr .75fr; gap: 14px; }
+    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    /* SECTION BAR like the picture */
+    .sectionBar{
+      margin: 14px 0 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.24);
+      border: 1px solid rgba(255,255,255,.12);
+      font-weight: 1000;
+      letter-spacing:.2px;
+    }
+
+    .stats{
+      display:grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
+      margin-top: 8px;
     }
-    @media (max-width: 520px) { .stats { grid-template-columns: 1fr; } }
+    @media (max-width: 520px){ .stats{ grid-template-columns:1fr; } }
 
-    .stat {
+    .stat{
+      border-radius: 14px;
       padding: 12px;
-      border-radius: 12px;
-      background: var(--panel);
-      border: 1px solid var(--panelBorder);
-    }
-    .stat .label { opacity: .8; font-size: 12px; }
-    .stat .value { font-size: 20px; margin-top: 6px; font-weight: 900; }
-
-    .howto{
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 12px;
-      background: rgba(0,0,0,.16);
+      background: rgba(0,0,0,.22);
       border: 1px solid rgba(255,255,255,.10);
     }
-    .howto b{ font-weight: 950; }
+    .stat .label{ font-size: 12px; opacity:.85; }
+    .stat .value{ margin-top: 6px; font-size: 22px; font-weight: 1000; }
 
-    .tiles {
-      margin-top: 12px;
-      display: grid;
+    .howto{
+      margin-top: 10px;
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(0,0,0,.20);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .howto p{ margin:0 0 10px; opacity:.9; }
+    .howto ul{ margin:0; padding-left:18px; line-height:1.55; opacity:.92; }
+    .howto b{ font-weight: 1000; color: var(--gold); }
+
+    /* Tiles look like “cards” */
+    .tiles{
+      margin-top: 10px;
+      display:grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
     }
+    @media (max-width: 520px){ .tiles{ grid-template-columns: repeat(2, 1fr); } }
 
-    .tileBtn {
-      width: 100%;
+    .tileBtn{
       border: 0;
-      border-radius: 12px;
-      padding: 12px 10px;
-      font-weight: 950;
-      cursor: pointer;
-      color: var(--btnText);
-      background: var(--btn);
-      min-height: 76px;
-      display: grid;
-      gap: 4px;
-      align-content: center;
-      text-align: left;
+      border-radius: 14px;
+      padding: 10px;
+      cursor:pointer;
+      text-align:left;
+      color:#fff;
+      background: rgba(0,0,0,.26);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      display:grid;
+      gap: 8px;
+      min-height: 108px;
+      position: relative;
+      overflow:hidden;
     }
-    .tileBtn small { opacity: .75; font-weight: 900; }
+    .tileBtn:hover{ transform: translateY(-1px); }
+    .tileArt{
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(60px 40px at 30% 30%, rgba(255,255,255,.20), transparent 60%),
+        linear-gradient(135deg, rgba(73,215,255,.25), rgba(255,157,45,.18));
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 8px 10px;
+      font-weight: 1000;
+    }
+    .tileArt .emoji{ font-size: 18px; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
+    .tileTitle{ font-weight: 1000; }
+    .tileMeta{ font-size: 12px; opacity:.88; }
 
-    .log {
+    .log{
       margin-top: 10px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 12px;
-      opacity: .9;
-      max-height: 160px;
-      overflow: auto;
+      opacity: .92;
+      max-height: 170px;
+      overflow:auto;
       padding: 10px;
-      border-radius: 12px;
+      border-radius: 14px;
       background: rgba(0,0,0,.22);
-      border: 1px solid rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
     }
 
-    .shopItem {
-      padding: 12px;
-      border-radius: 12px;
-      background: var(--panel);
-      border: 1px solid var(--panelBorder);
+    /* Upgrades with colored buy buttons (like picture) */
+    .shopItem{
       margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.20);
+      border: 1px solid rgba(255,255,255,.10);
     }
-    .shopItem h3 { margin: 0 0 6px; font-size: 15px; }
-    .shopItem p { margin: 0; opacity: .9; font-size: 13px; color: var(--muted); }
-    .shopItem .price { margin-top: 8px; font-weight: 950; }
+    .shopItem h3{ margin:0 0 6px; font-size: 15px; font-weight: 1000; }
+    .shopItem p{ margin:0; font-size: 13px; opacity:.9; color: var(--muted); }
+    .price{ margin-top: 10px; font-weight: 1000; }
 
-    .shopBtn, .modalBtn {
+    .shopBtn{
       width: 100%;
+      margin-top: 10px;
       border: 0;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-weight: 950;
-      cursor: pointer;
-      color: var(--btnText);
-      background: var(--btn);
+      border-radius: 14px;
+      padding: 11px 12px;
+      font-weight: 1000;
+      cursor:pointer;
+      color:#0b1220;
+      background: #fff;
     }
+    .shopBtn.green{ background: var(--green); color:#082012; }
+    .shopBtn.orange{ background: var(--orange); color:#2a1400; }
+    .shopBtn.red{ background: var(--red); color:#2a0000; }
 
-    .modalBackdrop {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.55);
-      display: none;
-      align-items: center;
-      justify-content: center;
+    .modalBackdrop{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
       padding: 18px;
+      background: rgba(0,0,0,.55);
       z-index: 30;
     }
-    .modal {
-      width: 100%;
-      max-width: 440px;
-      background: rgba(11,18,32,.96);
+    .modal{
+      width:100%;
+      max-width: 460px;
+      background: rgba(10,14,28,.96);
       border: 1px solid rgba(255,255,255,.12);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 14px;
-      box-shadow: 0 24px 80px rgba(0,0,0,.55);
+      box-shadow: var(--shadow);
+    }
+    .modal h3{ margin:0 0 8px; font-weight: 1000; }
+    .modal p{ margin:0 0 12px; opacity:.9; }
+    .modalBtn{
+      width:100%;
+      border:0;
+      border-radius: 14px;
+      padding: 11px 12px;
+      font-weight: 1000;
+      cursor:pointer;
+      color:#0b1220;
+      background: #fff;
     }
 
-    .toast {
+    .toast{
       position: fixed;
-      left: 50%;
+      left:50%;
       bottom: 18px;
       transform: translateX(-50%);
-      background: rgba(11,18,32,.92);
+      background: rgba(10,14,28,.92);
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 999px;
       padding: 10px 14px;
-      font-weight: 900;
-      color: #fff;
-      display: none;
+      font-weight: 1000;
+      color:#fff;
+      display:none;
       z-index: 40;
       box-shadow: 0 18px 60px rgba(0,0,0,.45);
     }
@@ -217,20 +363,32 @@
 </head>
 
 <body>
-  <header>
-    <h1>City Flip</h1>
-    <div class="btnrow">
-      <button id="installBtn" class="headerBtn secondary" style="display:none;">Install</button>
-      <button id="exportBtn" class="headerBtn secondary">Export</button>
-      <button id="importBtn" class="headerBtn secondary">Import</button>
-      <button id="resetBtn" class="headerBtn danger">Reset</button>
+  <div class="hero">
+    <div class="heroInner">
+      <div class="logo">
+        <div class="logoBadge">🏙️</div>
+        <div class="logoText">
+          <div class="title">City Flip</div>
+          <div class="subtitle">Tap • Upgrade • Build your skyline</div>
+        </div>
+      </div>
+
+      <div class="topBtns">
+        <button id="installBtn" class="btn ghost" style="display:none;">Install</button>
+        <button id="exportBtn" class="btn ghost">Export</button>
+        <button id="importBtn" class="btn ghost">Import</button>
+        <button id="resetBtn" class="btn danger">Reset</button>
+      </div>
     </div>
-  </header>
+
+    <div class="skyline" aria-hidden="true"></div>
+  </div>
 
   <div class="wrap">
     <div class="grid">
+
       <div class="card">
-        <h2 style="margin:0 0 10px;">Dashboard</h2>
+        <div class="sectionBar">Dashboard</div>
 
         <div class="stats">
           <div class="stat">
@@ -247,57 +405,55 @@
           </div>
         </div>
 
+        <div class="sectionBar" style="margin-top:14px;">How to Play</div>
         <div class="howto">
-          <h2 style="margin:0 0 8px;">How to Play</h2>
-          <p style="margin:0 0 10px; opacity:.9;">
-            Tap tiles to earn cash, buy upgrades to earn faster, and build your city over time.
-          </p>
-          <ul style="margin:0; padding-left:18px; line-height:1.5; opacity:.92;">
+          <p>Tap tiles to earn cash, buy upgrades to earn faster, and build your city over time.</p>
+          <ul>
             <li><b>Tap a City Tile</b> to earn money.</li>
             <li>Tiles can <b>level up</b> randomly as you tap.</li>
-            <li><b>Tap Boost</b> increases your base earnings per tap.</li>
+            <li><b>Tap Boost</b> increases earnings per tap.</li>
             <li><b>Passive Income</b> earns money every second.</li>
             <li><b>City Development</b> boosts all tile bonuses.</li>
-            <li>The game <b>autosaves</b> frequently.</li>
-            <li>Use <b>Export</b> and <b>Import</b> to manage saves.</li>
+            <li><b>Export</b>/<b>Import</b> to backup your save.</li>
             <li><b>Offline earnings</b> can appear when you return.</li>
           </ul>
         </div>
 
-        <h2 style="margin:16px 0 10px;">City Tiles</h2>
+        <div class="sectionBar" style="margin-top:14px;">City Tiles</div>
         <div id="tiles" class="tiles"></div>
 
         <div class="log" id="log"></div>
       </div>
 
       <div class="card">
-        <h2 style="margin:0 0 10px;">Upgrades</h2>
+        <div class="sectionBar">Upgrades</div>
 
         <div class="shopItem">
           <h3>Tap Boost</h3>
           <p>Increase money gained per tap.</p>
           <div class="price" id="tapBoostPrice">$25</div>
-          <button class="shopBtn" id="buyTapBoost">Buy</button>
+          <button class="shopBtn orange" id="buyTapBoost">Buy</button>
         </div>
 
         <div class="shopItem">
           <h3>Passive Income</h3>
           <p>Earn money every second.</p>
           <div class="price" id="passivePrice">$50</div>
-          <button class="shopBtn" id="buyPassive">Buy</button>
+          <button class="shopBtn green" id="buyPassive">Buy</button>
         </div>
 
         <div class="shopItem">
           <h3>City Development</h3>
           <p>Boosts ALL tile tap bonuses.</p>
           <div class="price" id="tileUpPrice">$75</div>
-          <button class="shopBtn" id="buyTileUp">Buy</button>
+          <button class="shopBtn orange" id="buyTileUp">Buy</button>
         </div>
 
         <p style="margin-top:12px;opacity:.85;font-size:13px;">
           Autosaves every few seconds + on background/close.
         </p>
       </div>
+
     </div>
   </div>
 
