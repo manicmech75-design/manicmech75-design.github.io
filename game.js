@@ -59,7 +59,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function costFor(type) {
     if (type === "home") return costHomes();
     if (type === "shop") return costShops();
-    return costOffices();
+    if (type === "office") return costOffices();
+    return 0; // Should not happen with valid types
   }
 
   function canAfford(type) {
@@ -77,11 +78,16 @@ document.addEventListener("DOMContentLoaded", () => {
       meterFillSeconds: state.meter.fillSeconds,
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    updateUI();
+    console.log("Game Saved!");
   }
 
   function loadGame() {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return false;
+    if (!raw) {
+      console.log("No saved game found.");
+      return false;
+    }
     try {
       const data = JSON.parse(raw);
       state.money = Number(data.money || 0);
@@ -105,10 +111,35 @@ document.addEventListener("DOMContentLoaded", () => {
       state.meter.progress = 0;
 
       recalcRps();
+      updateUI();
+      renderMap(); // Render the loaded map
+      console.log("Game Loaded!");
       return true;
-    } catch {
+    } catch (e) {
+      console.error("Failed to load game:", e);
       return false;
     }
+  }
+
+  function resetGame() {
+    if (!confirm("Are you sure you want to reset your city? This cannot be undone!")) {
+      return;
+    }
+    localStorage.removeItem(SAVE_KEY);
+    Object.assign(state, { // Reset state to initial values
+      money: 0,
+      rps: 1,
+      buildings: { homes: 0, shops: 0, offices: 0 },
+      map: Array.from({ length: MAP_W * MAP_H }, () => ""),
+      selected: "home",
+      meter: { progress: 0, fillSeconds: 12, reward: 15 },
+      running: true,
+      lastTick: performance.now(),
+    });
+    recalcRps();
+    updateUI();
+    renderMap();
+    console.log("Game Reset!");
   }
 
   // -------------------- Styles --------------------
@@ -169,6 +200,16 @@ document.addEventListener("DOMContentLoaded", () => {
       cursor:pointer;
       box-shadow: 0 10px 24px rgba(0,0,0,.35);
       user-select:none;
+      transition: all 0.1s ease-in-out;
+    }
+    button:hover:not(:disabled) {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    button:active:not(:disabled) {
+      filter: brightness(0.9);
+      transform: translateY(0);
+      box-shadow: 0 5px 12px rgba(0,0,0,.35);
     }
     button:disabled{ opacity:.45; cursor:not-allowed; }
 
@@ -190,6 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
       height:100%;
       width:0%;
       background: linear-gradient(90deg, rgba(255,220,170,.9), rgba(120,200,255,.9));
+      transition: width 0.1s ease-out; /* Smooth meter fill */
     }
     .tiny{ opacity:.75; font-size:12px; }
 
@@ -210,10 +252,16 @@ document.addEventListener("DOMContentLoaded", () => {
       font-size: 13px;
       cursor:pointer;
       user-select:none;
+      transition: all 0.1s ease-in-out;
+    }
+    .chip:hover{
+      background: rgba(255,255,255,.15);
+      border-color: rgba(255,255,255,.18);
     }
     .chip.on{
       background: rgba(120,200,255,.18);
       border-color: rgba(120,200,255,.35);
+      transform: scale(1.03);
     }
 
     .map{
@@ -231,6 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cursor:pointer;
       position:relative;
       overflow:hidden;
+      transition: all 0.08s ease-in-out;
     }
     .tile:hover{
       border-color: rgba(255,255,255,.18);
@@ -252,6 +301,10 @@ document.addEventListener("DOMContentLoaded", () => {
     .tile.home  { background: linear-gradient(180deg, rgba(130,200,255,.14), rgba(0,0,0,.25)); }
     .tile.shop  { background: linear-gradient(180deg, rgba(255,210,140,.14), rgba(0,0,0,.25)); }
     .tile.office{ background: linear-gradient(180deg, rgba(200,160,255,.14), rgba(0,0,0,.25)); }
+    .tile.home:hover  { background: linear-gradient(180deg, rgba(130,200,255,.20), rgba(0,0,0,.25)); }
+    .tile.shop:hover  { background: linear-gradient(180deg, rgba(255,210,140,.20), rgba(0,0,0,.25)); }
+    .tile.office:hover{ background: linear-gradient(180deg, rgba(200,160,255,.20), rgba(0,0,0,.25)); }
+
 
     footer{
       opacity:.72;
@@ -328,238 +381,208 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="tiny">
             No offline income. Switching tabs pauses earnings (no catch-up).
           </div>
-
-          <details style="margin-top:10px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.25);">
-            <summary style="cursor:pointer; padding: 10px 12px; user-select:none; font-weight:700; list-style:none;">Help</summary>
-            <div style="padding: 10px 12px 12px; opacity:.85; font-size:13px; line-height:1.35;">
-              • Pick a building type, then click an empty tile.<br>
-              • Prices increase as you build more of that type.<br>
-              • Activity Meter fills only while visible; collect only when full.<br>
-              • Support: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
-            </div>
-          </details>
+          <div class="tiny" style="margin-top:8px;">
+            Support: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
+          </div>
         </div>
       </div>
 
       <footer>
-        Support: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
+        Made with ❤️ by <a href="https://github.com/manicmech75-design" target="_blank">manicmech75-design</a> for fun.
       </footer>
     </div>
   `;
 
-  const moneyEl = document.getElementById("money");
-  const rpsEl = document.getElementById("rps");
-  const statusPill = document.getElementById("statusPill");
+  // -------------------- UI Element References --------------------
+  // Get references to all the elements we'll be updating or listening to
+  const ui = {
+    money: document.getElementById("money"),
+    rps: document.getElementById("rps"),
+    meterFill: document.getElementById("meterFill"),
+    meterReward: document.getElementById("meterReward"),
+    collectRevenueBtn: document.getElementById("collectRevenueBtn"),
+    meterHint: document.getElementById("meterHint"),
+    statusPill: document.getElementById("statusPill"),
+    saveBtn: document.getElementById("saveBtn"),
+    loadBtn: document.getElementById("loadBtn"),
+    resetBtn: document.getElementById("resetBtn"),
+    buildSeg: document.getElementById("buildSeg"),
+    costHome: document.getElementById("costHome"),
+    costShop: document.getElementById("costShop"),
+    costOffice: document.getElementById("costOffice"),
+    map: document.getElementById("map"),
+    counts: document.getElementById("counts"),
+  };
 
-  const meterFillEl = document.getElementById("meterFill");
-  const meterHintEl = document.getElementById("meterHint");
-  const meterRewardEl = document.getElementById("meterReward");
-  const collectRevenueBtn = document.getElementById("collectRevenueBtn");
+  // -------------------- Update UI Functions --------------------
+  function updateUI() {
+    ui.money.textContent = fmtInt(state.money);
+    ui.rps.textContent = fmtInt(state.rps);
 
-  const saveBtn = document.getElementById("saveBtn");
-  const loadBtn = document.getElementById("loadBtn");
-  const resetBtn = document.getElementById("resetBtn");
+    ui.costHome.textContent = fmtInt(costHomes());
+    ui.costShop.textContent = fmtInt(costShops());
+    ui.costOffice.textContent = fmtInt(costOffices());
 
-  const buildSeg = document.getElementById("buildSeg");
-  const mapEl = document.getElementById("map");
-  const countsEl = document.getElementById("counts");
-
-  const costHomeEl = document.getElementById("costHome");
-  const costShopEl = document.getElementById("costShop");
-  const costOfficeEl = document.getElementById("costOffice");
-
-  // -------------------- Map Render --------------------
-  function tileIcon(type) {
-    if (type === "home") return "🏠";
-    if (type === "shop") return "🏪";
-    if (type === "office") return "🏢";
-    return "";
-  }
-  function tileName(type) {
-    if (type === "home") return "Homes";
-    if (type === "shop") return "Shops";
-    if (type === "office") return "Offices";
-    return "";
-  }
-
-  function renderChips() {
-    [...buildSeg.querySelectorAll(".chip")].forEach(ch => {
-      ch.classList.toggle("on", ch.dataset.type === state.selected);
+    // Update build mode chip active state
+    Array.from(ui.buildSeg.children).forEach(chip => {
+      if (chip.dataset.type === state.selected) {
+        chip.classList.add("on");
+      } else {
+        chip.classList.remove("on");
+      }
+      // Disable chips if not enough money
+      const type = chip.dataset.type;
+      const costSpan = chip.querySelector('span'); // Assuming cost is in a span
+      if (costSpan) {
+          if (!canAfford(type)) {
+              costSpan.style.color = '#ff6b6b'; // Red color for unaffordable
+          } else {
+              costSpan.style.color = 'inherit'; // Default color
+          }
+      }
     });
+
+    // Meter UI
+    const meterProgressPercent = clamp01(state.meter.progress / state.meter.fillSeconds) * 100;
+    ui.meterFill.style.width = `${meterProgressPercent}%`;
+    ui.meterReward.textContent = fmtInt(state.meter.reward);
+
+    const isMeterFull = meterProgressPercent >= 99.9; // Use 99.9 for floating point precision
+    ui.collectRevenueBtn.disabled = !isMeterFull;
+    ui.meterHint.textContent = isMeterFull ? "Ready to collect!" : `Filling... (${Math.floor(meterProgressPercent)}%)`;
+    if (isMeterFull) {
+        ui.meterHint.style.color = '#a0ff90'; // Green hint
+    } else {
+        ui.meterHint.style.color = 'inherit';
+    }
+
+    // Building counts
+    ui.counts.textContent = `🏠 ${fmtInt(state.buildings.homes)} · 🏪 ${fmtInt(state.buildings.shops)} · 🏢 ${fmtInt(state.buildings.offices)}`;
   }
 
   function renderMap() {
-    mapEl.innerHTML = "";
-    for (let y = 0; y < MAP_H; y++) {
-      for (let x = 0; x < MAP_W; x++) {
-        const t = state.map[idx(x, y)];
-        const div = document.createElement("div");
-        div.className = "tile" + (t ? ` ${t}` : "");
-        div.dataset.x = String(x);
-        div.dataset.y = String(y);
+    ui.map.innerHTML = ""; // Clear existing map
+    for (let i = 0; i < MAP_W * MAP_H; i++) {
+      const tile = document.createElement("div");
+      tile.classList.add("tile");
+      const buildingType = state.map[i];
+      if (buildingType) {
+        tile.classList.add(buildingType);
+        let icon = "";
+        let label = "";
+        switch (buildingType) {
+          case "home": icon = "🏠"; label = "Home"; break;
+          case "shop": icon = "🏪"; label = "Shop"; break;
+          case "office": icon = "🏢"; label = "Office"; break;
+        }
+        tile.innerHTML = `<div class="label"><span class="icon">${icon}</span><span>${label}</span></div>`;
+      }
+      tile.dataset.index = i;
+      ui.map.appendChild(tile);
+    }
+  }
 
-        const label = document.createElement("div");
-        label.className = "label";
+  // -------------------- Game Loop --------------------
+  function gameLoop(currentTime) {
+    const deltaTime = (currentTime - state.lastTick) / 1000; // Convert to seconds
+    state.lastTick = currentTime;
 
-        const left = document.createElement("span");
-        left.className = "icon";
-        left.textContent = t ? tileIcon(t) : "⬚";
+    if (state.running && document.visibilityState === "visible") {
+      // Update meter progress
+      state.meter.progress += deltaTime;
+      if (state.meter.progress >= state.meter.fillSeconds) {
+        state.meter.progress = state.meter.fillSeconds; // Cap at max
+      }
 
-        const right = document.createElement("span");
-        right.textContent = t ? tileName(t) : "Empty";
+      // Check if meter is full and enable collect button
+      ui.collectRevenueBtn.disabled = state.meter.progress < state.meter.fillSeconds;
+      ui.statusPill.textContent = "🟢 Earning";
+      ui.statusPill.style.backgroundColor = 'rgba(100,200,100,.1)';
+      ui.statusPill.style.borderColor = 'rgba(100,200,100,.3)';
 
-        label.appendChild(left);
-        label.appendChild(right);
-        div.appendChild(label);
+    } else {
+      ui.statusPill.textContent = "⏸ Paused";
+      ui.statusPill.style.backgroundColor = 'rgba(255,160,0,.1)';
+      ui.statusPill.style.borderColor = 'rgba(255,160,0,.3)';
+    }
 
-        mapEl.appendChild(div);
+    updateUI(); // Update all UI elements
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // -------------------- Event Listeners --------------------
+  ui.saveBtn.addEventListener("click", saveGame);
+  ui.loadBtn.addEventListener("click", loadGame);
+  ui.resetBtn.addEventListener("click", resetGame);
+
+  // Build mode selection
+  ui.buildSeg.addEventListener("click", (e) => {
+    const chip = e.target.closest(".chip");
+    if (chip && chip.dataset.type) {
+      state.selected = chip.dataset.type;
+      updateUI();
+    }
+  });
+
+  // Tile placement
+  ui.map.addEventListener("click", (e) => {
+    const tile = e.target.closest(".tile");
+    if (tile) {
+      const index = parseInt(tile.dataset.index);
+      const currentBuilding = state.map[index];
+
+      // If tile is empty and player can afford, place building
+      if (!currentBuilding && canAfford(state.selected)) {
+        state.money -= costFor(state.selected);
+        state.buildings[state.selected + "s"]++; // Increment count for plural building type
+        state.map[index] = state.selected;
+        recalcRps();
+        updateUI();
+        renderMap(); // Re-render map to show new building
+      } else if (currentBuilding === state.selected && confirm(`Do you want to sell this ${currentBuilding}?`)) {
+        // Optional: Sell existing building of the same type
+        const sellPrice = Math.floor(costFor(currentBuilding) / 2); // Example: half price back
+        state.money += sellPrice;
+        state.buildings[currentBuilding + "s"]--;
+        state.map[index] = ""; // Remove building
+        recalcRps();
+        updateUI();
+        renderMap();
       }
     }
-  }
+  });
 
-  function renderCounts() {
-    countsEl.textContent = `🏠 ${state.buildings.homes} · 🏪 ${state.buildings.shops} · 🏢 ${state.buildings.offices}`;
-  }
+  // Collect revenue button
+  ui.collectRevenueBtn.addEventListener("click", () => {
+    if (state.meter.progress >= state.meter.fillSeconds) {
+      state.money += state.meter.reward;
+      state.meter.progress = 0; // Reset meter
+      state.meter.reward += 5; // Increase reward for next time
+      state.meter.fillSeconds = Math.max(5, state.meter.fillSeconds - 1); // Decrease fill time, but not below 5
+      updateUI();
+    }
+  });
 
-  // -------------------- Rendering --------------------
-  function render() {
-    moneyEl.textContent = fmtInt(state.money);
-    rpsEl.textContent = fmtInt(state.rps);
-
-    // meter
-    meterRewardEl.textContent = fmtInt(state.meter.reward);
-    meterFillEl.style.width = `${Math.floor(state.meter.progress * 100)}%`;
-    const full = state.meter.progress >= 1;
-    collectRevenueBtn.disabled = !full;
-    meterHintEl.textContent = full ? "Ready!" : "Filling…";
-
-    // costs in chips
-    costHomeEl.textContent = fmtInt(costHomes());
-    costShopEl.textContent = fmtInt(costShops());
-    costOfficeEl.textContent = fmtInt(costOffices());
-
-    // gray out chips if can't afford (visual only)
-    [...buildSeg.querySelectorAll(".chip")].forEach(ch => {
-      const t = ch.dataset.type;
-      ch.style.opacity = canAfford(t) ? "1" : "0.6";
-    });
-
-    renderCounts();
-    renderChips();
-  }
-
-  // -------------------- NO OFFLINE / NO HIDDEN TAB EARNINGS --------------------
-  function setRunning(isRunning) {
-    state.running = isRunning;
-    state.lastTick = performance.now(); // prevent catch-up
-    statusPill.textContent = isRunning ? "🟢 Earning" : "⏸️ Paused";
-    statusPill.style.opacity = isRunning ? "0.95" : "0.75";
-  }
-
-  document.addEventListener("visibilitychange", () => setRunning(!document.hidden));
-  window.addEventListener("blur", () => setRunning(false));
-  window.addEventListener("focus", () => setRunning(!document.hidden));
-
-  function tick(now) {
-    if (state.running) {
-      const delta = (now - state.lastTick) / 1000;
-      state.lastTick = now;
-
-      state.money += state.rps * delta;
-      state.meter.progress = clamp01(state.meter.progress + (delta / state.meter.fillSeconds));
-
-      render();
+  // Handle visibility change for pausing/unpausing
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      state.running = false;
     } else {
-      state.lastTick = now;
+      state.running = true;
+      state.lastTick = performance.now(); // Reset lastTick to prevent large delta on resume
     }
-    requestAnimationFrame(tick);
+    updateUI(); // Update status pill immediately
+  });
+
+  // -------------------- Initial Setup --------------------
+  // Attempt to load game on start, otherwise initialize
+  if (!loadGame()) {
+    recalcRps(); // Calculate initial RPS
+    updateUI();  // Initial UI render
+    renderMap(); // Initial map render
   }
 
-  // -------------------- Actions --------------------
-  buildSeg.addEventListener("click", (e) => {
-    const chip = e.target.closest(".chip");
-    if (!chip) return;
-    const t = chip.dataset.type;
-    if (t === "home" || t === "shop" || t === "office") {
-      state.selected = t;
-      render();
-    }
-  });
-
-  mapEl.addEventListener("click", (e) => {
-    const tile = e.target.closest(".tile");
-    if (!tile) return;
-    const x = Number(tile.dataset.x);
-    const y = Number(tile.dataset.y);
-    const i = idx(x, y);
-
-    if (state.map[i]) return; // already occupied
-
-    const type = state.selected;
-    const cost = costFor(type);
-    if (state.money < cost) return;
-
-    // Pay + place
-    state.money -= cost;
-    state.map[i] = type;
-
-    // Update counts
-    if (type === "home") state.buildings.homes += 1;
-    if (type === "shop") state.buildings.shops += 1;
-    if (type === "office") state.buildings.offices += 1;
-
-    recalcRps();
-    renderMap();
-    render();
-  });
-
-  collectRevenueBtn.addEventListener("click", () => {
-    if (state.meter.progress < 1) return;
-    state.money += state.meter.reward;
-    state.meter.progress = 0;
-    render();
-  });
-
-  saveBtn.addEventListener("click", () => {
-    saveGame();
-    saveBtn.textContent = "Saved ✅";
-    setTimeout(() => (saveBtn.textContent = "Save City"), 900);
-  });
-
-  loadBtn.addEventListener("click", () => {
-    const ok = loadGame();
-    if (ok) {
-      recalcRps();
-      renderMap();
-      render();
-      loadBtn.textContent = "Loaded ✅";
-    } else {
-      loadBtn.textContent = "No Save Found";
-    }
-    setTimeout(() => (loadBtn.textContent = "Load City"), 900);
-  });
-
-  resetBtn.addEventListener("click", () => {
-    localStorage.removeItem(SAVE_KEY);
-    state.money = 0;
-    state.buildings = { homes: 0, shops: 0, offices: 0 };
-    state.map = Array.from({ length: MAP_W * MAP_H }, () => "");
-    state.selected = "home";
-    state.meter.progress = 0;
-    state.meter.reward = 15;
-    state.meter.fillSeconds = 12;
-    recalcRps();
-    renderMap();
-    render();
-    resetBtn.textContent = "Reset ✅";
-    setTimeout(() => (resetBtn.textContent = "Reset"), 900);
-  });
-
-  // -------------------- Boot --------------------
-  loadGame();           // optional auto-load
-  recalcRps();
-  renderMap();
-  render();
-  setRunning(!document.hidden);
-  requestAnimationFrame(tick);
+  // Start the game loop
+  requestAnimationFrame(gameLoop);
 });
