@@ -1,415 +1,250 @@
-/* styles.css */
-:root{
-  --bg0:#050617;
-  --bg1:#0b1220;
-  --glass: rgba(255,255,255,.08);
-  --glass2: rgba(255,255,255,.06);
-  --border: rgba(255,255,255,.14);
-  --txt: rgba(255,255,255,.92);
-  --muted: rgba(255,255,255,.70);
-  --shadow: 0 14px 40px rgba(0,0,0,.45);
-  --radius: 18px;
-  --radius2: 14px;
-  --tile: rgba(255,255,255,.08);
-  --tileBorder: rgba(255,255,255,.16);
-  --good: #2ef2a5;
-  --warn: #ffd36a;
-  --bad: #ff6b6b;
-}
+// Flip City — Builder Edition (NO OFFLINE / NO TAB-HIDDEN INCOME)
+// Support: cityflipsupport@gmail.com
 
-*{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-html,body{ height:100%; }
-body{
-  margin:0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, Arial, sans-serif;
-  color: var(--txt);
-  background: radial-gradient(1200px 900px at 50% -10%, #6b2cff 0%, #1a1a44 35%, var(--bg0) 80%);
-  overflow:hidden;
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const root = document.getElementById("game");
+  if (!root) return console.error("❌ Missing <div id='game'></div> in index.html");
 
-#app{ height:100%; display:flex; flex-direction:column; }
+  const SUPPORT_EMAIL = "cityflipsupport@gmail.com";
 
-.topbar{
-  padding: 12px 14px 10px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: 10px;
-}
-.brand{ display:flex; align-items:center; gap:10px; min-width:0; }
-.logo{
-  width:40px; height:40px; border-radius: 14px;
-  background:
-    radial-gradient(10px 10px at 30% 30%, rgba(255,255,255,.35), transparent 60%),
-    linear-gradient(135deg, rgba(255,255,255,.25), rgba(255,255,255,.04));
-  border: 1px solid var(--border);
-  box-shadow: 0 12px 24px rgba(0,0,0,.35);
-}
-.titles{ min-width:0; }
-.name{ font-weight:800; letter-spacing:.2px; font-size:16px; line-height:1.1; }
-.tagline{ font-size:12px; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+  // -------- Game State --------
+  const state = {
+    money: 0,
+    rps: 1,
+    lastTick: performance.now(),
+    running: true, // only runs while tab is visible
+  };
 
-.top-actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
-.chip{
-  appearance:none; border:none; cursor:pointer;
-  padding: 9px 10px;
-  border-radius: 999px;
-  background: var(--glass);
-  color: var(--txt);
-  font-weight:700;
-  font-size:12px;
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 20px rgba(0,0,0,.22);
-}
-.chip:active{ transform: translateY(1px); }
-.dot{
-  display:inline-block; width:8px; height:8px; border-radius:999px;
-  background: var(--good);
-  margin-right:8px;
-  box-shadow: 0 0 12px rgba(46,242,165,.55);
-}
+  // -------- Styles --------
+  const style = document.createElement("style");
+  style.textContent = `
+    :root { color-scheme: dark; }
 
-.stage{
-  position:relative;
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  gap: 10px;
-  padding: 0 14px 14px;
-  overflow:hidden;
-}
+    body{
+      min-height:100vh;
+      background:
+        radial-gradient(900px 450px at 50% 0%, rgba(255,160,110,.55), transparent 60%),
+        linear-gradient(to top, #0b1220 0%, #1a2b4c 40%, #ff915e 100%);
+      color:#eaf0ff;
+    }
 
-#bgCanvas{
-  position:absolute;
-  inset: 0;
-  width:100%;
-  height:100%;
-  z-index:0;
-}
+    .wrap{ max-width:980px; margin:0 auto; padding:20px; }
+    .top{ display:flex; gap:12px; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; }
+    h1{ font-size:24px; margin:0; letter-spacing:.3px; }
+    .sub{ opacity:.85; font-size:13px; margin-top:4px; }
 
-.hud{
-  position:relative;
-  z-index:2;
-  display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.stat{
-  background: var(--glass2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius2);
-  padding: 10px 12px;
-  box-shadow: 0 12px 26px rgba(0,0,0,.20);
-  backdrop-filter: blur(8px);
-}
-.statLabel{ font-size:11px; color: var(--muted); font-weight:800; letter-spacing:.3px; text-transform:uppercase; }
-.statValue{ font-size:18px; font-weight:900; margin-top:3px; }
+    .grid{ display:grid; grid-template-columns: 1.1fr .9fr; gap:14px; margin-top:14px; }
+    @media (max-width: 860px){ .grid{ grid-template-columns:1fr; } }
 
-.panel{
-  position:relative;
-  z-index:2;
-  display:grid;
-  grid-template-columns: 1.05fr .95fr;
-  gap: 10px;
-}
-.nextTitle{
-  font-size:11px;
-  color: var(--muted);
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.35px;
-  margin: 0 0 6px 2px;
-}
-.nextCard, .missionCard{
-  background: var(--glass2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  box-shadow: 0 16px 34px rgba(0,0,0,.22);
-  backdrop-filter: blur(10px);
-}
-.nextCard{ display:flex; gap:10px; align-items:center; }
-.nextGlyph{
-  width:46px; height:46px;
-  border-radius: 14px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.16);
-  display:grid;
-  place-items:center;
-  font-size:20px;
-  font-weight:900;
-}
-.nextName{ font-weight:900; font-size:14px; }
-.nextHint{ color: var(--muted); font-size:12px; margin-top:2px; }
+    .card{
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    }
 
-.missionText{ font-weight:900; font-size:13px; }
-.missionProg{ margin-top:8px; display:flex; align-items:center; gap:10px; }
-.bar{
-  height:10px; flex:1;
-  background: rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.14);
-  border-radius: 999px;
-  overflow:hidden;
-}
-.barFill{
-  height:100%;
-  width: 0%;
-  background: linear-gradient(90deg, rgba(46,242,165,.95), rgba(141,255,248,.70));
-  border-radius: 999px;
-  transition: width .25s ease;
-}
-.missionMeta{ font-size:12px; color: var(--muted); font-weight:800; min-width:64px; text-align:right; }
+    .row{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .stat{ font-size:16px; }
+    .stat b{ font-variant-numeric: tabular-nums; }
 
-.boardWrap{
-  position:relative;
-  z-index:2;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex:1;
-  min-height: 260px;
-}
-.board{
-  width:min(92vw, 420px);
-  aspect-ratio: 1 / 1;
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  padding: 12px;
-  border-radius: 24px;
-  background: rgba(0,0,0,.20);
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
-}
-.cell{
-  position:relative;
-  border-radius: 18px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.14);
-  overflow:hidden;
-  display:grid;
-  place-items:center;
-  user-select:none;
-  touch-action: manipulation;
-  cursor:pointer;
-  transition: transform .12s ease, background .12s ease;
-}
-.cell:active{ transform: scale(.985); }
+    button{
+      background: linear-gradient(180deg,#6aa8ff,#3b6cff);
+      color:#fff;
+      border:0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size:14px;
+      cursor:pointer;
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+    }
+    button:disabled{ opacity:.45; cursor:not-allowed; }
 
-.tile{
-  width: 100%;
-  height: 100%;
-  display:grid;
-  place-items:center;
-  border-radius: 18px;
-  background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
-  border: 1px solid rgba(255,255,255,.16);
-  box-shadow: 0 16px 28px rgba(0,0,0,.22);
-  transform: translateZ(0);
-}
-.tileInner{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap: 3px;
-  text-align:center;
-  padding: 8px;
-}
-.glyph{ font-size: 20px; font-weight: 900; }
-.tier{ font-size: 11px; color: rgba(255,255,255,.75); font-weight: 900; letter-spacing:.25px; text-transform:uppercase; }
-.value{ font-size: 11px; color: rgba(255,255,255,.65); font-weight: 800; }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size: 13px;
+      opacity:.95;
+    }
 
-.pop{ animation: pop .18s ease-out; }
-@keyframes pop{
-  0%{ transform: scale(.92); }
-  100%{ transform: scale(1); }
-}
-.shake{ animation: shake .16s linear; }
-@keyframes shake{
-  0%,100%{ transform: translateX(0); }
-  25%{ transform: translateX(-3px); }
-  75%{ transform: translateX(3px); }
-}
+    /* Skyline preview */
+    .sky{
+      position:relative;
+      height:140px;
+      border-radius: 12px;
+      overflow:hidden;
+      background:
+        linear-gradient(to top, rgba(11,18,32,1) 0%, rgba(26,43,76,1) 55%, rgba(255,145,94,1) 100%);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .sun{
+      position:absolute; left:12%; top:18%;
+      width:64px; height:64px; border-radius:50%;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.9), rgba(255,220,170,.6) 35%, rgba(255,160,110,.15) 70%, transparent 72%);
+      filter: blur(.1px);
+      opacity:.95;
+    }
+    .buildings{
+      position:absolute; left:0; right:0; bottom:0; height:62%;
+      background:
+        linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,.15) 60%, transparent),
+        repeating-linear-gradient(
+          to right,
+          rgba(0,0,0,.65) 0px,
+          rgba(0,0,0,.65) 18px,
+          rgba(20,20,20,.80) 18px,
+          rgba(20,20,20,.80) 40px
+        );
+    }
+    .windows{
+      position:absolute; left:0; right:0; bottom:0; height:62%;
+      background:
+        repeating-linear-gradient(
+          to right,
+          transparent 0px,
+          transparent 10px,
+          rgba(255,210,140,.35) 10px,
+          rgba(255,210,140,.35) 12px,
+          transparent 12px,
+          transparent 22px
+        );
+      mix-blend-mode: screen;
+      opacity:.55;
+      transform: translateY(10px);
+    }
 
-.bottombar{
-  position:relative;
-  z-index:2;
-  display:grid;
-  grid-template-columns: 1fr 1fr 1.1fr;
-  gap: 10px;
-  padding-bottom: max(0px, env(safe-area-inset-bottom));
-}
-.btn{
-  appearance:none;
-  border:none;
-  border-radius: 16px;
-  padding: 12px 12px;
-  font-weight: 900;
-  font-size: 14px;
-  cursor:pointer;
-  box-shadow: 0 16px 34px rgba(0,0,0,.25);
-  border: 1px solid rgba(255,255,255,.14);
-}
-.btn.primary{
-  background: linear-gradient(135deg, rgba(46,242,165,.92), rgba(106,178,255,.82));
-  color: #07111e;
-}
-.btn.secondary{
-  background: rgba(255,255,255,.08);
-  color: var(--txt);
-  backdrop-filter: blur(10px);
-}
-.btn.big{ padding: 14px 14px; border-radius: 18px; font-size: 15px; }
-.btn:disabled{ opacity:.5; cursor:not-allowed; }
+    footer{
+      opacity:.70;
+      font-size:12px;
+      text-align:center;
+      margin: 18px 0 4px;
+      line-height: 1.4;
+    }
 
-.toast{
-  position:absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(78px + env(safe-area-inset-bottom));
-  z-index: 5;
-  padding: 10px 12px;
-  border-radius: 999px;
-  background: rgba(0,0,0,.55);
-  border: 1px solid rgba(255,255,255,.14);
-  backdrop-filter: blur(10px);
-  color: rgba(255,255,255,.92);
-  font-weight: 800;
-  font-size: 12px;
-  opacity: 0;
-  pointer-events:none;
-  transition: opacity .18s ease, transform .18s ease;
-}
-.toast.show{
-  opacity: 1;
-  transform: translateX(-50%) translateY(-4px);
-}
+    a { color: #a9c7ff; }
+  `;
+  document.head.appendChild(style);
 
-/* Modals */
-.modal{
-  position:absolute;
-  inset:0;
-  background: rgba(0,0,0,.55);
-  z-index: 8;
-  display:none;
-  padding: 18px;
-  align-items:center;
-  justify-content:center;
-}
-.modal.show{ display:flex; }
-.modalCard{
-  width: min(520px, 96vw);
-  border-radius: 22px;
-  background: rgba(18,18,38,.80);
-  border: 1px solid rgba(255,255,255,.14);
-  box-shadow: 0 24px 60px rgba(0,0,0,.55);
-  backdrop-filter: blur(14px);
-  overflow:hidden;
-}
-.modalHead{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding: 14px 14px 10px;
-  border-bottom: 1px solid rgba(255,255,255,.10);
-}
-.modalTitle{ font-weight: 950; letter-spacing:.2px; }
-.x{
-  appearance:none;
-  border:none;
-  cursor:pointer;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  background: rgba(255,255,255,.08);
-  color: rgba(255,255,255,.92);
-  font-size: 16px;
-  font-weight: 900;
-  border: 1px solid rgba(255,255,255,.12);
-}
-.modalBody{ padding: 14px; }
-.howRow{
-  display:grid;
-  grid-template-columns: 34px 1fr;
-  gap: 10px;
-  padding: 10px 0;
-}
-.howNum{
-  width: 30px; height: 30px; border-radius: 12px;
-  display:grid; place-items:center;
-  background: rgba(255,255,255,.10);
-  border: 1px solid rgba(255,255,255,.12);
-  font-weight: 950;
-}
-.howTitle{ font-weight: 950; margin-bottom: 4px; }
-.howText{ color: rgba(255,255,255,.78); line-height: 1.35; font-size: 13px; }
-.ctaRow{ display:flex; justify-content:center; padding-top: 10px; }
+  // -------- UI --------
+  root.innerHTML = `
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <h1>🌆 Flip City</h1>
+          <div class="sub">Builder Edition · Money only earns while this tab is open & visible</div>
+        </div>
+        <div class="pill" id="statusPill">🟢 Earning</div>
+      </div>
 
-/* Feedback */
-.fbBox{
-  width:100%;
-  border-radius: 16px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.14);
-  color: rgba(255,255,255,.92);
-  padding: 12px;
-  font-weight: 700;
-  outline: none;
-}
+      <div class="grid">
+        <div class="card">
+          <div class="row">
+            <div class="stat">💰 Money: <b>$<span id="money">0</span></b></div>
+            <div class="stat">📈 Revenue: <b>$<span id="rps">1</span></b>/sec</div>
+          </div>
 
-/* First-load overlay */
-.firstLoad{
-  position:absolute;
-  inset:0;
-  z-index: 9;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding: 18px;
-  background: radial-gradient(900px 700px at 50% 0%, rgba(255,140,92,.22), rgba(0,0,0,.62));
-}
-.firstLoad.show{ display:flex; }
-.firstCard{
-  width: min(560px, 96vw);
-  border-radius: 26px;
-  background: rgba(18,18,38,.82);
-  border: 1px solid rgba(255,255,255,.14);
-  box-shadow: 0 30px 80px rgba(0,0,0,.60);
-  backdrop-filter: blur(16px);
-  padding: 18px;
-  text-align:center;
-}
-.firstKicker{
-  font-weight: 950;
-  letter-spacing:.25px;
-  color: rgba(255,255,255,.86);
-  font-size: 12px;
-  text-transform:uppercase;
-}
-.firstTitle{
-  margin-top: 8px;
-  font-size: 22px;
-  font-weight: 1000;
-  line-height: 1.1;
-}
-.firstSub{
-  margin-top: 8px;
-  color: rgba(255,255,255,.78);
-  font-weight: 750;
-  font-size: 14px;
-  line-height: 1.35;
-}
-.firstActions{
-  margin-top: 14px;
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.fine{ margin-top: 10px; color: rgba(255,255,255,.62); font-size: 12px; font-weight: 750; }
+          <div style="height:10px"></div>
 
-@media (max-width: 390px){
-  .panel{ grid-template-columns: 1fr; }
-  .firstActions{ grid-template-columns: 1fr; }
-}
+          <div class="row">
+            <button id="upgradeBtn">Upgrade Building ($25)</button>
+            <button id="collectBtn" title="Manual collect (optional).">Collect +$5</button>
+          </div>
+
+          <div style="height:10px"></div>
+          <div class="sub">
+            Tip: Switching tabs pauses earnings (no catch-up).
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row" style="align-items:flex-end">
+            <div>
+              <div style="font-weight:700; margin-bottom:6px;">City Preview</div>
+              <div class="sub">Sunset skyline (no external images)</div>
+            </div>
+          </div>
+          <div style="height:10px"></div>
+          <div class="sky">
+            <div class="sun"></div>
+            <div class="buildings"></div>
+            <div class="windows"></div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        Support: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
+      </footer>
+    </div>
+  `;
+
+  const moneyEl = document.getElementById("money");
+  const rpsEl = document.getElementById("rps");
+  const upgradeBtn = document.getElementById("upgradeBtn");
+  const collectBtn = document.getElementById("collectBtn");
+  const statusPill = document.getElementById("statusPill");
+
+  function render() {
+    moneyEl.textContent = Math.floor(state.money);
+    rpsEl.textContent = state.rps;
+    upgradeBtn.disabled = state.money < 25;
+  }
+
+  // -------- NO OFFLINE / NO HIDDEN TAB EARNINGS --------
+  function setRunning(isRunning) {
+    state.running = isRunning;
+    // Reset tick clock so there is NO "catch up" when you return
+    state.lastTick = performance.now();
+
+    statusPill.textContent = isRunning ? "🟢 Earning" : "⏸️ Paused";
+    statusPill.style.opacity = isRunning ? "0.95" : "0.75";
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    setRunning(!document.hidden);
+  });
+
+  window.addEventListener("blur", () => setRunning(false));
+  window.addEventListener("focus", () => setRunning(!document.hidden));
+
+  function tick(now) {
+    if (state.running) {
+      const delta = (now - state.lastTick) / 1000;
+      state.lastTick = now;
+
+      // Earn only while visible/running
+      state.money += state.rps * delta;
+      render();
+    } else {
+      // keep lastTick fresh without accumulating
+      state.lastTick = now;
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  // -------- Actions --------
+  upgradeBtn.addEventListener("click", () => {
+    if (state.money >= 25) {
+      state.money -= 25;
+      state.rps += 1;
+      render();
+    }
+  });
+
+  collectBtn.addEventListener("click", () => {
+    // manual action (always allowed when game is open)
+    state.money += 5;
+    render();
+  });
+
+  // Start
+  render();
+  setRunning(!document.hidden);
+  requestAnimationFrame(tick);
+});
